@@ -41,19 +41,30 @@ class Database:
         return connection
     
     def init_tables(self):
-        TABLE_MESSAGES_QUERY = """
+        TABLE_INIT_MESSAGES_QUERY = """
             CREATE TABLE IF NOT EXISTS messages
             (
-            id SERIAL PRIMARY KEY,
-            message_id BIGINT UNIQUE,
-            user_id BIGINT,
-            timestamp TEXT,
-            guild_name TEXT,
-            channel_name TEXT,
-            content TEXT
+                id SERIAL PRIMARY KEY,
+                message_id BIGINT UNIQUE,
+                user_id BIGINT,
+                timestamp TEXT,
+                guild_name TEXT,
+                channel_name TEXT,
+                content TEXT
             );
             """
-        self.cursor.execute(TABLE_MESSAGES_QUERY)
+        TABLE_INIT_MEMBERS_QUERY = """
+            CREATE TABLE IF NOT EXISTS members
+            (
+                id SERIAL PRIMARY KEY,
+                user_id BIGINT UNIQUE,
+                username TEXT,
+                present BOOLEAN,
+                banned BOOLEAN
+            );
+            """
+        self.cursor.execute(TABLE_INIT_MESSAGES_QUERY)
+        self.cursor.execute(TABLE_INIT_MEMBERS_QUERY)
 
     
     async def add_message_to_database(self, message_id: int, 
@@ -76,5 +87,21 @@ class Database:
             print(f"error: {e}")
         
         
+    async def add_member_to_database(self, user_id: int,
+                                     username:str,
+                                     present: bool,
+                                     banned: bool):
+        ADD_MEMBER_QUERY = """
+            INSERT INTO members (user_id, username, present, banned) 
+            VALUES (%s,%s,%s,%s)
+            """
         
+        data = (user_id, username, present, banned)
+
+        try:
+            self.cursor.execute(ADD_MEMBER_QUERY, data)
+            self.connection.commit()
+        except Exception as e:
+            print(f"error: {e}")
+
 
