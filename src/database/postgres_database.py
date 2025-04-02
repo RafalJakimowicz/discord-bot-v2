@@ -80,13 +80,14 @@ class Database:
             VALUES (%s,%s,%s,%s,%s,%s)
             """).format(sql.Identifier(table_name))
         
-        data = (message_id, user_id, timestamp, guild_name, channel_name, content,)
+        data = (message_id, user_id, timestamp, guild_name, channel_name, content)
 
         try: 
             self.cursor.execute(ADD_MESSAGE_QUERY,data)
             self.connection.commit()
         except Exception as e:
             print(f"error: {e}")
+            self.connection.rollback()
         
         
     async def add_member_to_database(self, user_id: int,
@@ -101,6 +102,7 @@ class Database:
         ADD_MEMBER_QUERY = sql.SQL("""
             INSERT INTO {} (user_id, username, present, banned)
             VALUES (%s, %s, %s, %s)
+            ON CONFLICT (user_id) DO NOTHING
         """).format(sql.Identifier(table_name))
         
         data = (user_id, username, present, banned,)
@@ -110,6 +112,7 @@ class Database:
             self.connection.commit()
         except Exception as e:
             print(f"error: {e}")
+            self.connection.rollback()
 
     async def get_all_messages(self, guild_name: str):
         GET_ALL_MESSAGES_QUERY = f"""
@@ -123,26 +126,25 @@ class Database:
 
     async def get_messages_by_username(self, guild_name:str, username: str):
         #format query to match actual guild
-        user_table_name = f"{guild_name}_users"
+        user_table_name = f"{guild_name}_members"
         GET_USER_ID_QUERY = sql.SQL("SELECT * FROM {} WHERE username = %s").format(sql.Identifier(user_table_name))
         
         user_id = 0
         try:
-            self.cursor.execute(GET_USER_ID_QUERY, (username))
+            self.cursor.execute(GET_USER_ID_QUERY, (username,))
             response = self.cursor.fetchall()
-            print(response)
 
             #gets user id from response
-            user_id = int(response[1])
+            user_id = int(response[0][1])
         except Exception as e:
-            print(f"error: {e}")
+            print(f"error:  {e}")
 
         #again format query based of guild
         messages_table_name = f"{guild_name}_messages"
         GET_MESSAGES_QUERY = sql.SQL("SELECT * FROM {} WHERE user_id = %s").format(sql.Identifier(messages_table_name))
         records = []
         try:
-            self.cursor.execute(GET_MESSAGES_QUERY, (user_id))
+            self.cursor.execute(GET_MESSAGES_QUERY, (user_id,))
             records = self.cursor.fetchall()
         except Exception as e:
             print(f"error: {e}")

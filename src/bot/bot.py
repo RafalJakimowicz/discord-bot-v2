@@ -3,6 +3,7 @@ from discord.ext import commands
 from discord import app_commands
 from ..database.postgres_database import Database
 from ..aichat.chatbot import AiChat
+from .messagesCog import MessagesCog
 from datetime import datetime
 
 class DiscordBot(commands.Bot):
@@ -16,6 +17,7 @@ class DiscordBot(commands.Bot):
 
     async def on_ready(self):
         print(f'Logged as {self.user.name} (ID: {self.user.id})') 
+        await self.add_cog(MessagesCog(self))
         for g in self.guilds:
             #create table for every guild bot is in
             self.__sql_database.init_table(g.name)
@@ -56,10 +58,11 @@ class DiscordBot(commands.Bot):
 
     async def get_logs_by_name(self, interaction: discord.Interaction, username: str):
         await interaction.response.defer(thinking=True)
+
         response_str = ""
-        response_list = await self.__sql_database.get_messages_by_username(username=username)
+        response_list = await self.__sql_database.get_messages_by_username(username=username, guild_name=interaction.guild.name)
         for row in response_list:
-            response_str = response_str + row[0] + "\n"
+            response_str = response_str + str(row) + "\n"
 
         embeded_messege = discord.Embed(
             title="Database response",
@@ -71,21 +74,21 @@ class DiscordBot(commands.Bot):
 
 
     
-    async def on_message(self, message: discord.Message):
-
-        if message.author == self.user:
-            return
-
-        await self.__sql_database.add_message_to_database(
-            message.id,
-            message.author.id,
-            str(datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
-            message.guild.name,
-            message.channel.name,
-            message.content)
-        
-        await self.process_commands(message)
-        return await super().on_message(message)
+    #async def on_message(self, message: discord.Message):
+#
+    #    if message.author == self.user:
+    #        return
+#
+    #    await self.__sql_database.add_message_to_database(
+    #        message.id,
+    #        message.author.id,
+    #        str(datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
+    #        message.guild.name,
+    #        message.channel.name,
+    #        message.content)
+    #    
+    #    await self.process_commands(message)
+    #    return await super().on_message(message)
     
     async def on_member_join(self, member: discord.Member):
         

@@ -22,7 +22,7 @@ class AiChat():
             messages=[
                 {
                     "role": "user",
-                    "content": f'{query}. Use max of 1000 characters in response'
+                    "content": f'{query}. Use max of 1500 characters in response'
                 }
             ]
         )
