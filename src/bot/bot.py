@@ -15,7 +15,12 @@ class DiscordBot(commands.Bot):
         pass
 
     async def on_ready(self):
-        print(f'Logged as {self.user.name} (ID: {self.user.id})')
+        print(f'Logged as {self.user.name} (ID: {self.user.id})') 
+        for g in self.guilds:
+            #create table for every guild bot is in
+            self.__sql_database.init_table(g.name)
+            for m in g.members:
+                await self.__sql_database.add_member_to_database(m.id, m.global_name, True, False, g.name)
 
     async def setup_hook(self):
         for command in self.commands_list:
@@ -28,8 +33,14 @@ class DiscordBot(commands.Bot):
                 name='ask',
                 description="give response from ai chatbot",
                 callback=self.ask_ai,
+            ),
+            app_commands.Command(
+                name="user-logs",
+                description="gives logs from user",
+                callback=self.get_logs_by_name
             )
         ]
+
     
     async def ask_ai(self, interaction: discord.Interaction, query: str):
         await interaction.response.defer(thinking=True)
@@ -42,6 +53,22 @@ class DiscordBot(commands.Bot):
         )
 
         await interaction.followup.send(embed=embeded_message)
+
+    async def get_logs_by_name(self, interaction: discord.Interaction, username: str):
+        await interaction.response.defer(thinking=True)
+        response_str = ""
+        response_list = await self.__sql_database.get_messages_by_username(username=username)
+        for row in response_list:
+            response_str = response_str + row[0] + "\n"
+
+        embeded_messege = discord.Embed(
+            title="Database response",
+            description=f"logs for: {username} \n {response_str}",
+            color=discord.Color.from_rgb(46, 255, 137)
+        )
+
+        await interaction.followup.send(embed=embeded_messege)
+
 
     
     async def on_message(self, message: discord.Message):
@@ -65,7 +92,7 @@ class DiscordBot(commands.Bot):
         if member == self.user:
             return
         
-        await self.__sql_database.add_member_to_database(member.id, member.global_name, True, False)
+        await self.__sql_database.add_member_to_database(member.id, member.global_name, True, False, member.guild.name)
 
         return super().on_member_join(member)
     
