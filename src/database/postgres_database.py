@@ -53,6 +53,7 @@ class Database:
                 content TEXT
             );
             """
+        
         TABLE_INIT_MEMBERS_QUERY = f"""
             CREATE TABLE IF NOT EXISTS {guild_name}_members
             (
@@ -63,8 +64,24 @@ class Database:
                 banned BOOLEAN
             );
             """
+        
+        TABLE_INIT_DELETED_MESSAGES_QUERY = f"""
+            CREATE TABLE IF NOT EXISTS {guild_name}_deleted_messsages
+            (
+                id SERIAL PRIMARY KEY,
+                CONSTRAINT fk_message
+                    FOREIGN KEY (message_id)
+                        REFERENCES {guild_name}_messages(id)
+                        ON DELETE CASCADE
+            );
+            """
         self.cursor.execute(TABLE_INIT_MESSAGES_QUERY)
         self.cursor.execute(TABLE_INIT_MEMBERS_QUERY)
+        self.cursor.execute(TABLE_INIT_DELETED_MESSAGES_QUERY)
+
+    async def get_message_by_id(self, message_id: int, guild_name: str):
+        table_messages_name = f'{guild_name}_messages'
+
 
     
     async def add_message_to_database(self,message_id: int, 
@@ -138,6 +155,7 @@ class Database:
             user_id = int(response[0][1])
         except Exception as e:
             print(f"error:  {e}")
+            self.connection.rollback()
 
         #again format query based of guild
         messages_table_name = f"{guild_name}_messages"
@@ -148,6 +166,7 @@ class Database:
             records = self.cursor.fetchall()
         except Exception as e:
             print(f"error: {e}")
+            self.connection.rollback()
 
         return records
 

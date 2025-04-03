@@ -24,3 +24,11 @@ class MessagesCog(commands.Cog):
             message.content)
         
         await self.bot.process_commands(message)
+
+    @commands.Cog.listener()
+    async def on_message_delete(self, message: discord.Message):
+
+        if message.author == self.bot.user:
+            return
+        
+        
