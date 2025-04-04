@@ -15,13 +15,8 @@ class MessagesCog(commands.Cog):
         if message.author == self.bot.user:
             return
 
-        await self.__sql.add_message_to_database(
-            message.id,
-            message.author.id,
-            str(datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
-            message.guild.name,
-            message.channel.name,
-            message.content)
+        await self.__sql.add_message_to_database(message=message,
+            timestamp=str(datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
         
         await self.bot.process_commands(message)
 
@@ -31,4 +26,4 @@ class MessagesCog(commands.Cog):
         if message.author == self.bot.user:
             return
         
-        
+        await self.__sql.add_deleted_message(message=message)

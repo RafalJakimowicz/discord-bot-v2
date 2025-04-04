@@ -95,7 +95,7 @@ class DiscordBot(commands.Bot):
         if member == self.user:
             return
         
-        await self.__sql_database.add_member_to_database(member.id, member.global_name, True, False, member.guild.name)
+        await self.__sql_database.add_member_to_database(member=member, present=True, banned=False)
 
         return super().on_member_join(member)
     
