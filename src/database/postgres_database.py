@@ -117,12 +117,27 @@ class Database:
             CREATE TABLE IF NOT EXISTS edited_messages
             (
                 id SERIAL PRIMARY KEY,
-                message_id BIGINT UNIQUE NOT NULL,
+                message_id BIGINT NOT NULL,
                 before_content TEXT,
                 after_content TEXT,
                 CONSTRAINT fk_message
                     FOREIGN KEY (message_id)
                         REFERENCES messages(message_id)
+                        ON DELETE CASCADE
+            );
+            """
+        
+        TABLE_JOINS_AND_LEAVES_INIT_QUERY = """
+            CREATE TABLE IF NOT EXISTS member_joins_leaves
+            (
+                id SERIAL PRIMARY KEY,
+                user_id BIGINT NOT NULL,
+                time_stamp TEXT,
+                join BOOLEAN,
+                leave BOOLEAN,
+                CONSTRAINT fk_members
+                    FOREIGN KEY (user_id)
+                        REFERENCES members(user_id)
                         ON DELETE CASCADE
             );
             """
@@ -132,6 +147,7 @@ class Database:
             self.cursor.execute(sql.SQL(TABLE_INIT_MEMBERS_QUERY))
             self.cursor.execute(sql.SQL(TABLE_INIT_DELETED_MESSAGES_QUERY))
             self.cursor.execute(sql.SQL(TABLE_INIT_EDITED_MESSAGES_QUERY))
+            self.cursor.execute(sql.SQL(TABLE_JOINS_AND_LEAVES_INIT_QUERY))
             self.connection.commit()
         except Exception as e:
             print("error: " + str(e))
@@ -206,6 +222,7 @@ class Database:
             self.connection.commit()
         except Exception as e:
             print("error: " + str(e))
+            self.connection.rollback()
     
     async def add_message_to_database(self,message: discord.Message, timestamp: str):
         """
@@ -231,8 +248,7 @@ class Database:
         except Exception as e:
             print(f"error: {e}")
             self.connection.rollback()
-        
-        
+             
     async def add_member_to_database(self, member: discord.Member,
                                      present: bool,
                                      banned: bool):
@@ -320,6 +336,24 @@ class Database:
 
         return records
 
+    async def track_member_joins_and_leaves(self, member: discord.Member):
+        """
+        Inserts record that is tracking that member joins or leaves guid
+        
+        :param before: member that changes state of being in guild.
+        :type before: discord.Member
+        """
+
+
+        table_name = f"member_joins_leaves"
+        ADD_RECORD_QUERY = sql.SQL("INSER INTO {} (user_id, time_stamp, join, leave) VALUES (%s, %s, %s, %s)").format(sql.Identifier(table_name))
+
+        try:
+            self.cursor.execute(ADD_RECORD_QUERY)
+            self.connection.commit()
+        except Exception as e:
+            print("error: " + str(e))
+            self.connection.rollback()
 
 
 

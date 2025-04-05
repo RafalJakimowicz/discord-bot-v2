@@ -72,23 +72,6 @@ class DiscordBot(commands.Bot):
 
         await interaction.followup.send(embed=embeded_messege)
 
-
-    
-    #async def on_message(self, message: discord.Message):
-#
-    #    if message.author == self.user:
-    #        return
-#
-    #    await self.__sql_database.add_message_to_database(
-    #        message.id,
-    #        message.author.id,
-    #        str(datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
-    #        message.guild.name,
-    #        message.channel.name,
-    #        message.content)
-    #    
-    #    await self.process_commands(message)
-    #    return await super().on_message(message)
     
     async def on_member_join(self, member: discord.Member):
         
