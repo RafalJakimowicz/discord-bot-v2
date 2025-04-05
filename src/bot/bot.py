@@ -60,7 +60,7 @@ class DiscordBot(commands.Bot):
         await interaction.response.defer(thinking=True)
 
         response_str = ""
-        response_list = await self.__sql_database.get_messages_by_username(username=username, guild_name=interaction.guild.name)
+        response_list = await self.__sql_database.get_messages_by_username(username=username)
         for row in response_list:
             response_str = response_str + str(row) + "\n"
 

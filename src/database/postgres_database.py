@@ -62,22 +62,23 @@ class Database:
 
         return connection
     
-    def init_table(self, guild_name):
+    def init_table(self):
         """
         Initializes the necessary tables for a specific guild.
         
         This method creates three tables:
-          - {guild_name}_messages: Stores message-related information.
-          - {guild_name}_members: Stores member-related information.
-          - {guild_name}_deleted_messages: Stores references to deleted messages with a foreign key constraint
+          - messages: Stores message-related information.
+          - members: Stores member-related information.
+          - deleted_messages: Stores references to deleted messages with a foreign key constraint
             linking back to the messages table.
+          - edited_messages: Stores reference to message and stores before and after edit content
         
         :param guild_name: The name of the guild for which the tables are created.
         :type guild_name: str
         """
 
         TABLE_INIT_MESSAGES_QUERY = f"""
-            CREATE TABLE IF NOT EXISTS {guild_name}_messages
+            CREATE TABLE IF NOT EXISTS messages
             (
                 id SERIAL PRIMARY KEY,
                 message_id BIGINT UNIQUE,
@@ -90,7 +91,7 @@ class Database:
             """
         
         TABLE_INIT_MEMBERS_QUERY = f"""
-            CREATE TABLE IF NOT EXISTS {guild_name}_members
+            CREATE TABLE IF NOT EXISTS members
             (
                 id SERIAL PRIMARY KEY,
                 user_id BIGINT UNIQUE,
@@ -101,27 +102,42 @@ class Database:
             """
         
         TABLE_INIT_DELETED_MESSAGES_QUERY = f"""
-            CREATE TABLE IF NOT EXISTS {guild_name}_deleted_messages
+            CREATE TABLE IF NOT EXISTS deleted_messages
             (
                 id SERIAL PRIMARY KEY,
                 message_id BIGINT UNIQUE NOT NULL,
                 CONSTRAINT fk_message
                     FOREIGN KEY (message_id)
-                        REFERENCES {guild_name}_messages(message_id)
+                        REFERENCES messages(message_id)
+                        ON DELETE CASCADE
+            );
+            """
+        
+        TABLE_INIT_EDITED_MESSAGES_QUERY = f"""
+            CREATE TABLE IF NOT EXISTS edited_messages
+            (
+                id SERIAL PRIMARY KEY,
+                message_id BIGINT UNIQUE NOT NULL,
+                before_content TEXT,
+                after_content TEXT,
+                CONSTRAINT fk_message
+                    FOREIGN KEY (message_id)
+                        REFERENCES messages(message_id)
                         ON DELETE CASCADE
             );
             """
         try:
                 
-            self.cursor.execute(TABLE_INIT_MESSAGES_QUERY)
-            self.cursor.execute(TABLE_INIT_MEMBERS_QUERY)
-            self.cursor.execute(TABLE_INIT_DELETED_MESSAGES_QUERY)
+            self.cursor.execute(sql.SQL(TABLE_INIT_MESSAGES_QUERY))
+            self.cursor.execute(sql.SQL(TABLE_INIT_MEMBERS_QUERY))
+            self.cursor.execute(sql.SQL(TABLE_INIT_DELETED_MESSAGES_QUERY))
+            self.cursor.execute(sql.SQL(TABLE_INIT_EDITED_MESSAGES_QUERY))
             self.connection.commit()
         except Exception as e:
             print("error: " + str(e))
             self.connection.rollback()
 
-    async def get_message_by_id(self, message_id: int, guild_name: str) -> list:
+    async def get_message_by_id(self, message_id: int) -> list:
         """
         Retrieves a message record from the messages table based on its message_id.
         
@@ -133,7 +149,7 @@ class Database:
         :rtype: list
         """
 
-        table_messages_name = f'{guild_name}_messages'
+        table_messages_name = f'messages'
 
         SELECT_BY_ID_QUERY = sql.SQL("SELECT * FROM {} WHERE message_id = %s").format(sql.Identifier(table_messages_name))
 
@@ -158,7 +174,7 @@ class Database:
         :param message: The Discord message object that was deleted.
         :type message: discord.Message
         """
-        table_deleted_name = f"{message.guild.name}_deleted_messages"
+        table_deleted_name = f"deleted_messages"
 
         ADD_QUERY = sql.SQL("""INSERT INTO {} (message_id) VALUES (%s)""").format(sql.Identifier(table_deleted_name))
 
@@ -169,7 +185,27 @@ class Database:
             print("error: " + str(e))
             self.connection.rollback()
 
+    async def add_edited_message_to_database(self, before: discord.Message, after: discord.Message):
+        """
+        Inserts a edited message record into the edited_messages table.
+        
+        :param before: before message object to be add to database.
+        :type before: discord.Message
+        :param after: after message object to be added to database
+        :type after: discord.Message
+        """
 
+        table_name = f"edited_messages"
+        ADD_EDITED_MESSAGE_QUERY = sql.SQL("""
+            INSERT INTO {} (message_id, before_content, after_content)
+            VALUES (%s,%s,%s)
+        """).format(sql.Identifier(table_name))
+
+        try:
+            self.cursor.execute(ADD_EDITED_MESSAGE_QUERY, (before.id, before.content, after.content))
+            self.connection.commit()
+        except Exception as e:
+            print("error: " + str(e))
     
     async def add_message_to_database(self,message: discord.Message, timestamp: str):
         """
@@ -179,10 +215,9 @@ class Database:
         :type message: discord.Message
         :param timestamp: The timestamp indicating when the message was sent.
         :type timestamp: str
-        :param guild_name: The guild name, which is used to derive the table name.
         """
         
-        table_name = f"{message.guild.name}_messages"
+        table_name = f"messages"
         ADD_MESSAGE_QUERY = sql.SQL("""
             INSERT INTO {} (message_id, user_id, timestamp, guild_name, channel_name, content)
             VALUES (%s,%s,%s,%s,%s,%s)
@@ -215,7 +250,7 @@ class Database:
         """
 
         
-        table_name = f"{member.guild.name}_members"
+        table_name = f"members"
 
         # Compose the query to match guild
         ADD_MEMBER_QUERY = sql.SQL("""
@@ -233,17 +268,15 @@ class Database:
             print(f"error: {e}")
             self.connection.rollback()
 
-    async def get_all_messages(self, guild_name: str) -> list:
+    async def get_all_messages(self) -> list:
         """
         Retrieves all message records from the messages table for a specific guild.
         
-        :param guild_name: The guild name which is used to determine the messages table name.
-        :type guild_name: str
         :return: A list of tuples representing all messages.
         :rtype: list
         """
         GET_ALL_MESSAGES_QUERY = f"""
-            SELECT * FROM {guild_name}_messages
+            SELECT * FROM messages
             """
         
         self.cursor.execute(GET_ALL_MESSAGES_QUERY)
@@ -251,20 +284,17 @@ class Database:
 
         return records
 
-    async def get_messages_by_username(self, guild_name:str, username: str) -> list:
+    async def get_messages_by_username(self, username: str) -> list:
         """
         Retrieves messages posted by a user by first determining the user's ID from the members table
         and then querying the messages table.
         
-        :param guild_name: The guild name which is used to determine both members and messages table names.
-        :type guild_name: str
         :param username: The username of the member whose messages should be retrieved.
         :type username: str
         :return: A list of tuples representing the messages posted by the user.
         :rtype: list
         """
-        #format query to match actual guild
-        user_table_name = f"{guild_name}_members"
+        user_table_name = f"members"
         GET_USER_ID_QUERY = sql.SQL("SELECT * FROM {} WHERE username = %s").format(sql.Identifier(user_table_name))
         
         user_id = 0
@@ -278,8 +308,7 @@ class Database:
             print(f"error:  {e}")
             self.connection.rollback()
 
-        #again format query based of guild
-        messages_table_name = f"{guild_name}_messages"
+        messages_table_name = f"messages"
         GET_MESSAGES_QUERY = sql.SQL("SELECT * FROM {} WHERE user_id = %s").format(sql.Identifier(messages_table_name))
         records = []
         try:

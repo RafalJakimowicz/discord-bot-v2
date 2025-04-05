@@ -27,3 +27,14 @@ class MessagesCog(commands.Cog):
             return
         
         await self.__sql.add_deleted_message(message=message)
+
+    @commands.Cog.listener()
+    async def on_message_edit(self, before: discord.Message, after: discord.Message):
+
+        if before.author == self.bot.user:
+            return
+        
+        await self.__sql.add_edited_message_to_database(before=before, after=after)
+        
+
+        
