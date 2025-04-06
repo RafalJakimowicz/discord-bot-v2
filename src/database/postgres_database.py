@@ -95,9 +95,7 @@ class Database:
             (
                 id SERIAL PRIMARY KEY,
                 user_id BIGINT UNIQUE,
-                username TEXT,
-                present BOOLEAN,
-                banned BOOLEAN
+                username TEXT
             );
             """
         
@@ -249,9 +247,7 @@ class Database:
             print(f"error: {e}")
             self.connection.rollback()
              
-    async def add_member_to_database(self, member: discord.Member,
-                                     present: bool,
-                                     banned: bool):
+    async def add_member_to_database(self, member: discord.Member):
         """
         Inserts a new member record into the members table for a specific guild.
         
@@ -259,10 +255,6 @@ class Database:
         
         :param member: member entity to be added to database.
         :type member: discord.Member
-        :param present: Whether the member is currently present.
-        :type present: bool
-        :param banned: Whether the member is banned.
-        :type banned: bool
         """
 
         
@@ -270,12 +262,12 @@ class Database:
 
         # Compose the query to match guild
         ADD_MEMBER_QUERY = sql.SQL("""
-            INSERT INTO {} (user_id, username, present, banned)
-            VALUES (%s, %s, %s, %s)
+            INSERT INTO {} (user_id, username)
+            VALUES (%s, %s)
             ON CONFLICT (user_id) DO NOTHING
         """).format(sql.Identifier(table_name))
         
-        data = (member.id, member.global_name, present, banned,)
+        data = (member.id, member.global_name)
 
         try:
             self.cursor.execute(ADD_MEMBER_QUERY, data)
@@ -336,7 +328,7 @@ class Database:
 
         return records
 
-    async def track_member_joins_and_leaves(self, member: discord.Member):
+    async def track_member_joins_and_leaves(self, member: discord.Member, join: bool, leave: bool, timestamp: str):
         """
         Inserts record that is tracking that member joins or leaves guid
         
@@ -349,7 +341,7 @@ class Database:
         ADD_RECORD_QUERY = sql.SQL("INSER INTO {} (user_id, time_stamp, join, leave) VALUES (%s, %s, %s, %s)").format(sql.Identifier(table_name))
 
         try:
-            self.cursor.execute(ADD_RECORD_QUERY)
+            self.cursor.execute(ADD_RECORD_QUERY, (member.id, timestamp, join, leave))
             self.connection.commit()
         except Exception as e:
             print("error: " + str(e))
