@@ -7,11 +7,10 @@ from .messagesCog import MessagesCog
 from .membersCog import MembersCog
 
 class DiscordBot(commands.Bot):
-    def __init__(self, command_prefix, intents, config: dict):
+    def __init__(self, command_prefix, intents, config: dict, config_path: str):
         super().__init__(command_prefix=command_prefix, intents=intents)
         self.config = config
         self.__sql_database = Database()
-        self.__ai_chat = AiChat()
         self.commands_list = []
         self.setup_commands()
 
@@ -36,11 +35,12 @@ class DiscordBot(commands.Bot):
 
     def setup_commands(self):
         if(self.config["features"]["ai-chat"] == True):
+            self.__ai_chat = AiChat()
             self.commands_list.append(
                 app_commands.Command(
                     name="user-logs",
                     description="gives logs from user",
-                    callback=self.get_logs_by_name
+                    callback=self.ask_ai
                 )
             )
 
@@ -49,7 +49,7 @@ class DiscordBot(commands.Bot):
                 app_commands.Command(
                     name='ask',
                     description="give response from ai chatbot",
-                    callback=self.ask_ai,
+                    callback=self.get_logs_by_name,
                 )
             )
 

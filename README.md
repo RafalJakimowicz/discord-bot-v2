@@ -1,4 +1,4 @@
-# discord-bot-v2
+# Discord logging and administration bot
 
 Discord bot for advance logging on server and more
 
