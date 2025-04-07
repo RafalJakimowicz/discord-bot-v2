@@ -1,0 +1,12 @@
+{
+    "logging" : {
+        "members-logging-channel": "",
+        "messages-logging-channel": ""
+    },
+
+    "features": {
+        "members-logging": true,
+        "messages-logging": true,
+        "ai-chat": true
+    }
+}

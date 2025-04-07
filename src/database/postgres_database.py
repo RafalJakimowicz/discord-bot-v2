@@ -131,8 +131,8 @@ class Database:
                 id SERIAL PRIMARY KEY,
                 user_id BIGINT NOT NULL,
                 time_stamp TEXT,
-                join BOOLEAN,
-                leave BOOLEAN,
+                is_join BOOL,
+                is_leave BOOL,
                 CONSTRAINT fk_members
                     FOREIGN KEY (user_id)
                         REFERENCES members(user_id)
@@ -141,11 +141,11 @@ class Database:
             """
         try:
                 
-            self.cursor.execute(sql.SQL(TABLE_INIT_MESSAGES_QUERY))
-            self.cursor.execute(sql.SQL(TABLE_INIT_MEMBERS_QUERY))
-            self.cursor.execute(sql.SQL(TABLE_INIT_DELETED_MESSAGES_QUERY))
-            self.cursor.execute(sql.SQL(TABLE_INIT_EDITED_MESSAGES_QUERY))
-            self.cursor.execute(sql.SQL(TABLE_JOINS_AND_LEAVES_INIT_QUERY))
+            self.cursor.execute(TABLE_INIT_MESSAGES_QUERY)
+            self.cursor.execute(TABLE_INIT_MEMBERS_QUERY)
+            self.cursor.execute(TABLE_INIT_DELETED_MESSAGES_QUERY)
+            self.cursor.execute(TABLE_INIT_EDITED_MESSAGES_QUERY)
+            self.cursor.execute(TABLE_JOINS_AND_LEAVES_INIT_QUERY)
             self.connection.commit()
         except Exception as e:
             print("error: " + str(e))
@@ -257,15 +257,12 @@ class Database:
         :type member: discord.Member
         """
 
-        
-        table_name = f"members"
-
         # Compose the query to match guild
-        ADD_MEMBER_QUERY = sql.SQL("""
-            INSERT INTO {} (user_id, username)
+        ADD_MEMBER_QUERY = """
+            INSERT INTO members (user_id, username)
             VALUES (%s, %s)
             ON CONFLICT (user_id) DO NOTHING
-        """).format(sql.Identifier(table_name))
+        """
         
         data = (member.id, member.global_name)
 
@@ -338,7 +335,7 @@ class Database:
 
 
         table_name = f"member_joins_leaves"
-        ADD_RECORD_QUERY = sql.SQL("INSER INTO {} (user_id, time_stamp, join, leave) VALUES (%s, %s, %s, %s)").format(sql.Identifier(table_name))
+        ADD_RECORD_QUERY = sql.SQL("INSER INTO {} (user_id, time_stamp, is_join, is_leave) VALUES (%s, %s, %s, %s)").format(sql.Identifier(table_name))
 
         try:
             self.cursor.execute(ADD_RECORD_QUERY, (member.id, timestamp, join, leave))
