@@ -5,23 +5,29 @@ from ..database.postgres_database import Database
 from ..aichat.chatbot import AiChat
 from .messagesCog import MessagesCog
 from .membersCog import MembersCog
+from .adminConfig import AdminConfig
 
 class DiscordBot(commands.Bot):
     def __init__(self, command_prefix, intents, config: dict, config_path: str):
         super().__init__(command_prefix=command_prefix, intents=intents)
         self.config = config
+        self.path = config_path
         self.__sql_database = Database()
+        self.__admin = AdminConfig(
+            bot=self,
+            config=self.config,
+            config_path=self.path
+        )
         self.commands_list = []
         self.setup_commands()
 
     async def on_ready(self):
         print(f'Logged as {self.user.name} (ID: {self.user.id})') 
 
-        if(self.config["features"]["messages-logging"] == True):
+        if(self.config["features"]["logging"] == True):
             await self.add_cog(MessagesCog(self))
-
-        if(self.config["features"]["members-logging"] == True):
             await self.add_cog(MembersCog(self))
+
 
         #init database
         self.__sql_database.init_table()
@@ -38,20 +44,16 @@ class DiscordBot(commands.Bot):
             self.__ai_chat = AiChat()
             self.commands_list.append(
                 app_commands.Command(
-                    name="user-logs",
-                    description="gives logs from user",
+                    name="ask",
+                    description="give response from ai chatbot",
                     callback=self.ask_ai
                 )
             )
 
-        if(self.config["features"]["messages-logging"] == True):
-            self.commands_list.append(
-                app_commands.Command(
-                    name='ask',
-                    description="give response from ai chatbot",
-                    callback=self.get_logs_by_name,
-                )
-            )
+        if(self.config["features"]["logging"] == True):
+            for command in self.__admin.get_commands():
+                self.commands_list.append(command)
+            #self.commands_list = [*self.commands_list, self.__admin.get_commands()]
 
     
     async def ask_ai(self, interaction: discord.Interaction, query: str):

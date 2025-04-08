@@ -50,26 +50,22 @@ after this see your config file at name config.json in project main directory sh
 and change features to your preference leave "logging" section as it is bot will update this on his own
 ```json
 {
-    "logging" : {
+    "logging": {
         "logging-channel-group-id": 0,
-        "members-logging-channel-id": 0,
         "members-joins-channel-id": 0,
         "members-leaves-channel-id": 0,
         "messages-stats-channel-id": 0,
         "commands-channel-id": 0,
         "admin-voice-channel": 0
     },
-
     "features": {
-        "members-logging": true,
-        "messages-logging": true,
+        "logging": true,
         "ai-chat": true
     },
-
     "roles": {
-        "mod-role-id":0,
+        "mod-role-id": 0,
         "admin-role-id": 0,
-        "owner-role-id": 0 
+        "owner-role-id": 0
     }
 }
 ```

@@ -6,13 +6,21 @@ from datetime import datetime
 from ..database.postgres_database import Database
 import textwrap
 
-class AdminCog(commands.Cog):
-    def __init__(self, bot, config: dict, config_path: str):
+class AdminConfig():
+    def __init__(self, bot: commands.Bot ,config: dict, config_path: str):
         self.bot = bot
         self.config = config
         self.path = config_path
+        self.config = {}
+        self.load_config()
         self.commands_list = []
         self.__sql = Database()
+
+    def load_config(self):
+        with open(self.path, 'r', encoding="UTF-8") as config_file:
+            self.config = json.load(config_file)
+
+        print(str(self.config))
 
     def get_commands(self) -> list:
         """
@@ -21,7 +29,7 @@ class AdminCog(commands.Cog):
         :return: commands list
         :rtype: list
         """
-        self.commands_list.append(
+        self.commands_list = [
             app_commands.Command(
                 name="member-logs",
                 description="get logs by member username",
@@ -31,8 +39,13 @@ class AdminCog(commands.Cog):
                 name="quick-setup",
                 description="makes quick setup for basic logging channels and roles",
                 callback=self.quick_setup
+            ),
+            app_commands.Command(
+                name="remove-logging",
+                description="remove logging channels and role creted by bot",
+                callback=self.remove_setup_channels
             )
-        )
+        ]
         return self.commands_list
     
     async def make_mod_role(self, guild: discord.Guild) -> discord.Role:
@@ -44,15 +57,17 @@ class AdminCog(commands.Cog):
         :return: mod role
         :rtype: discord.Role
         """
-        moderator = discord.Role
         stage_mod = discord.Permissions.stage_moderator()
         membership = discord.Permissions.membership()
-        mod = stage_mod | membership | discord.Permissions.DEFAULT_VALUE
-        moderator.name = "Moderator"
-        moderator.color = discord.Color.green()
-        moderator.mentionable = True
-        moderator.permissions = mod
-        return await guild.create_role(moderator)
+        mod = stage_mod.value | membership.value | discord.Permissions.DEFAULT_VALUE
+        mod_perm = discord.Permissions(mod)
+        return await guild.create_role(
+            name="Moderator",
+            permissions=mod_perm,
+            colour=discord.Color.green(),
+            hoist=True,
+            mentionable=False,
+        )
     
     async def make_admin_role(self, guild: discord.Guild) -> discord.Role:
         """
@@ -63,13 +78,15 @@ class AdminCog(commands.Cog):
         :return: admin role
         :rtype: discord.Role
         """
-        admin = discord.Role
-        admin.permissions = discord.Permissions.administrator
-        admin.name = "Admin"
-        admin.color = discord.Color.red()
-        admin.mentionable = False
-        admin.position = 98
-        return await guild.create_role(admin)
+
+        return await guild.create_role(
+            name="Admin",
+            permissions=discord.Permissions.all(),
+            colour=discord.Color.red(),
+            hoist=True,
+            mentionable=False,
+        )
+
     
     async def make_owner_role(self, guild: discord.Guild) -> discord.Role:
         """
@@ -80,13 +97,14 @@ class AdminCog(commands.Cog):
         :return: owner role
         :rtype: discord.Role
         """
-        owner = discord.Role
-        owner.permissions = discord.Permissions.all()
-        owner.name = "Właściciel"
-        owner.color = discord.Color.yellow()
-        owner.mentionable = False
-        owner.position = 99
-        return await guild.create_role(owner)
+
+        return await guild.create_role(
+            name="Właściciel",
+            permissions=discord.Permissions.all(),
+            colour=discord.Color.yellow(),
+            hoist=True,
+            mentionable=False,
+        )
     
     async def create_private_category(self, guild: discord.Guild, roles: list, *, category_name: str = "Logi"):
 
@@ -102,6 +120,12 @@ class AdminCog(commands.Cog):
         return category
 
     async def create_channels_in_category(self, guild: discord.Guild, category: discord.CategoryChannel) -> tuple:
+        """
+        Creates channels in category 
+
+        :param guild: guild for channels to be made
+        :type guild: discord.Guild
+        """
         name_of_stats_channel = "Statystyki"
         name_of_commands_channel = "Komendy"
         name_of_joins_channel = "Przyloty"
@@ -134,9 +158,50 @@ class AdminCog(commands.Cog):
             category=category
         )
 
+
         return ([stats_channel,commands_channel,joins_channel, leaves_channel],[voice_channel])
 
 
+    async def remove_setup_channels(self, interaction: discord.Interaction):
+        """
+        Removes all channels and roles created by bot
+
+        :param interaction: inteaction object with member
+        :type interaction: discord.Interaction
+        """
+        await interaction.response.defer(thinking=True)
+
+        #check if user is admin
+        if any(member_role.id == self.config["roles"]["owner-role-id"] for member_role in interaction.user.roles):
+
+            #deletes channels
+            for channel_key in self.config["logging"]:
+                for channel in interaction.guild.channels:
+                    if channel.id == self.config["logging"][channel_key]:
+                        self.config["logging"][channel_key] = 0
+                        await channel.delete()
+
+            #deletes roles
+            for role_key in self.config["roles"]:
+                for role in interaction.guild.roles:
+                    if self.config["roles"][role_key] == role.id:
+                        self.config["roles"][role_key] = 0
+                        await role.delete()
+            
+            #updates config file
+            with open(self.path, 'w', encoding="UTF-8") as c_file:
+                json.dump(self.config, c_file, indent=4)
+
+            await interaction.followup.send("Done")
+
+        else:
+            await interaction.followup.send("Incorect role")
+            return
+
+
+                
+
+            
 
     
     async def quick_setup(self, interaction: discord.Interaction):
@@ -146,6 +211,23 @@ class AdminCog(commands.Cog):
         :param interaction: interaction object 
         :type interaction: discord.Interaction
         """
+
+        await interaction.response.defer(thinking=True)
+
+        nonzero = True
+        print(str(self.config))
+        for key in self.config["logging"]:
+            if self.config["logging"][key] == 0:
+                nonzero = False
+        
+        for key in self.config["roles"]:
+            if self.config["roles"][key] == 0:
+                nonzero = False
+
+        if nonzero:
+            await interaction.response.send_message("All variables are already configured")
+            return
+            
         mod_role = await self.make_mod_role(interaction.guild)
         admin_role = await self.make_admin_role(interaction.guild)
         owner_role = await self.make_owner_role(interaction.guild)
@@ -172,21 +254,21 @@ class AdminCog(commands.Cog):
 
         category_id = category.id
 
-        with open(self.path, "r+", encoding='utf-8') as config_file:
-            config = json.load(config_file)
+        self.load_config()
+        with open(self.path, "w+", encoding='utf-8') as config_file:
             #setup variables in config file for logging
-            config["logging"]["logging-channel-group-id"] = category_id
-            config["logging"]["commands-channel-id"] = commands_channel_id
-            config["logging"]["messages-stats-channel-id"] = stats_channel_id
-            config["logging"]["members-leaves-channel-id"] = leaves_channel_id
-            config["logging"]["members-joins-channel-id"] = joins_channel_id
-            config["logging"]["admin-voice-channel"] = voice_channel_id
+            self.config["logging"]["logging-channel-group-id"] = category_id
+            self.config["logging"]["commands-channel-id"] = commands_channel_id
+            self.config["logging"]["messages-stats-channel-id"] = stats_channel_id
+            self.config["logging"]["members-leaves-channel-id"] = leaves_channel_id
+            self.config["logging"]["members-joins-channel-id"] = joins_channel_id
+            self.config["logging"]["admin-voice-channel"] = voice_channel_id
 
             #and for roles
-            config["roles"]["mod-role-id"] = mod_role.id
-            config["roles"]["admin-role-id"] = admin_role.id
-            config["roles"]["owner-role-id"] = owner_role.id
-            json.dump(config, config_file, indent=4)
+            self.config["roles"]["mod-role-id"] = mod_role.id
+            self.config["roles"]["admin-role-id"] = admin_role.id
+            self.config["roles"]["owner-role-id"] = owner_role.id
+            json.dump(self.config, config_file, indent=4)
 
         response_str = textwrap.dedent(f"""
             Created channels in category {category.name}:
@@ -208,17 +290,30 @@ class AdminCog(commands.Cog):
             color=discord.Color.green()
         )
 
-        interaction.response.send_message(embed=embed, ephemeral=True)
+        await interaction.followup.send(embed=embed)
 
 
 
     async def get_logs_by_name(self, interaction: discord.Interaction, username: str):
+        """
+        Send response message with logs to user
+
+        :param interaction: interaction object with member
+        :type interaction: discord.Interaction
+        """
         await interaction.response.defer(thinking=True)
+
+        if interaction.channel.id != self.config["logging"]["commands-channel-id"]:
+            await interaction.followup.send("Invalid channel")
+            return
 
         response_str = ""
         response_list = await self.__sql.get_messages_by_username(username=username)
         for row in response_list:
-            response_str = response_str + str(row) + "\n"
+            tmp = ""
+            for column in row:
+                tmp = tmp + str(column) + " "
+            response_str = response_str + tmp + "\n"
 
         embeded_messege = discord.Embed(
             title="Logi z bazy danych",
