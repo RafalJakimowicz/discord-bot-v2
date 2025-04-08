@@ -1,5 +1,6 @@
 {
     "logging" : {
+        "logging-channel-group": "",
         "members-logging-channel": "",
         "messages-logging-channel": ""
     },

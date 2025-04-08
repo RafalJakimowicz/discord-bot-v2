@@ -261,7 +261,10 @@ class Database:
         ADD_MEMBER_QUERY = """
             INSERT INTO members (user_id, username)
             VALUES (%s, %s)
-            ON CONFLICT (user_id) DO NOTHING
+            ON CONFLICT (user_id) 
+                DO UPDATE SET
+                username = EXCLUDED.username
+                
         """
         
         data = (member.id, member.global_name)
@@ -329,8 +332,14 @@ class Database:
         """
         Inserts record that is tracking that member joins or leaves guid
         
-        :param before: member that changes state of being in guild.
-        :type before: discord.Member
+        :param member: member that changes state of being in guild.
+        :type member: discord.Member
+        :param join: if user joining rn to guild
+        :type join: bool
+        :param leave: if user leaving guild rn
+        :type leave: bool
+        :param timestamp: time of this action
+        :type timestamp: str
         """
 
 
@@ -339,6 +348,30 @@ class Database:
 
         try:
             self.cursor.execute(ADD_RECORD_QUERY, (member.id, timestamp, join, leave))
+            self.connection.commit()
+        except Exception as e:
+            print("error: " + str(e))
+            self.connection.rollback()
+
+    async def update_user(self, before: discord.Member, after: discord.Member):
+        """
+        Updates username of user in database
+
+        :param before: user instance before change
+        :type before: discord.Memeber
+        :param after: user instamce after update
+        :type after: discord.Member
+        """
+        if(before.id != after.id):
+            raise Exception("User id do not match!")
+        table_name = "members"
+
+        UPDATE_QUERY = sql.SQL("UPDATE {} SET username = %s WHERE user_id = %s").format(sql.Identifier(table_name))
+
+        data = (after.global_name, after.id)
+
+        try:
+            self.cursor.execute(UPDATE_QUERY, data)
             self.connection.commit()
         except Exception as e:
             print("error: " + str(e))

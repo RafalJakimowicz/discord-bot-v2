@@ -22,3 +22,10 @@ class MembersCog(commands.Cog):
             return
         
         await self.__sql.track_member_joins_and_leaves(member, False, True, str(datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+
+    @commands.Cog.listener()
+    async def on_member_update(self, before: discord.Member, after: discord.Member):
+        if before == self.bot.user:
+            return
+        
+        await self.__sql.update_user(before=before, after=after)
