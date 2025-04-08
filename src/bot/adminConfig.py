@@ -50,6 +50,46 @@ class AdminConfig():
                 name="remove-logging",
                 description="remove logging channels and role creted by bot",
                 callback=self.remove_setup_channels
+            ),
+            app_commands.Command(
+                name="set-stats-channel",
+                description="sets stats channel",
+                callback=self.set_stats_channel
+            ),
+            app_commands.Command(
+                name="set-joins-channel",
+                description="sets joins channel",
+                callback=self.set_joins_channel
+            ),
+            app_commands.Command(
+                name="set-leaves-channel",
+                description="sets leaves channel",
+                callback=self.set_leaves_channel
+            ),
+            app_commands.Command(
+                name="set-commands-channel",
+                description="sets commands channel",
+                callback=self.set_commands_channel
+            ),
+            app_commands.Command(
+                name="set-logging-category",
+                description="sets logging category",
+                callback=self.set_logging_category
+            ),
+            app_commands.Command(
+                name="set-to-owner",
+                description="sets role as owner",
+                callback=self.set_owner_role
+            ),
+            app_commands.Command(
+                name="set-to-admin",
+                description="sets role as admin",
+                callback=self.set_admin_role
+            ),
+            app_commands.Command(
+                name="set-to-mod",
+                description="sets role as mod",
+                callback=self.set_mod_role
             )
         ]
         return self.commands_list
@@ -92,8 +132,7 @@ class AdminConfig():
             hoist=True,
             mentionable=False,
         )
-
-    
+ 
     async def make_owner_role(self, guild: discord.Guild) -> discord.Role:
         """
         Makes owner rule with all permisions
@@ -180,7 +219,6 @@ class AdminConfig():
 
         return ([stats_channel,commands_channel,joins_channel, leaves_channel],[voice_channel])
 
-
     async def remove_setup_channels(self, interaction: discord.Interaction):
         """
         Removes all channels and roles created by bot
@@ -216,12 +254,6 @@ class AdminConfig():
         else:
             await interaction.followup.send("Incorect role")
             return
-
-
-                
-
-            
-
     
     async def quick_setup(self, interaction: discord.Interaction):
         """
@@ -274,6 +306,8 @@ class AdminConfig():
         category_id = category.id
 
         self.load_config()
+
+        #sets values in config file
         with open(self.path, "w+", encoding='utf-8') as config_file:
             #setup variables in config file for logging
             self.config["logging"]["logging-channel-group-id"] = category_id
@@ -311,9 +345,7 @@ class AdminConfig():
 
         await interaction.followup.send(embed=embed)
 
-
-
-    async def get_logs_by_name(self, interaction: discord.Interaction, username: str):
+    async def get_logs_by_name(self, interaction: discord.Interaction, member: discord.Member):
         """
         Send response message with logs to user
 
@@ -329,7 +361,7 @@ class AdminConfig():
             return
 
         response_str = ""
-        response_list = await self.__sql.get_messages_by_username(username=username)
+        response_list = await self.__sql.get_messages_by_username(username=member.global_name)
         for row in response_list:
             tmp = ""
             for column in row:
@@ -338,8 +370,166 @@ class AdminConfig():
 
         embeded_messege = discord.Embed(
             title="Logi z bazy danych",
-            description=f"Logi dla: {username} \n {response_str}",
+            description=f"Logi dla: {member.global_name} \n {response_str}",
             color=discord.Color.from_rgb(46, 255, 137)
         )
 
         await interaction.followup.send(embed=embeded_messege)
+
+    async def set_stats_channel(self, interaction: discord.Interaction, channel: discord.TextChannel):
+        """
+        Sets manually stats channel
+
+        :param interaction: interaction object
+        :type interaction: discord.Interaction
+        :param channel: channel to be set as stats channel
+        :type channel: discord.TextChannel
+        """
+
+        if interaction.channel.id != self.config["logging"]["commands-channel-id"]:
+            return
+        
+        self.config["logging"]["messages-stats-channel-id"] = channel.id
+
+        with open(self.path, 'w', encoding="UTF-8") as config_file:
+            json.dump(self.config, config_file, indent=4)
+
+        await interaction.response.send_message("Changed", ephemeral=True)
+
+    async def set_joins_channel(self, interaction: discord.Interaction, channel: discord.TextChannel):
+        """
+        Sets manually joins channel
+
+        :param interaction: interaction object
+        :type interaction: discord.Interaction
+        :param channel: channel to be set as joins channel
+        :type channel: discord.TextChannel
+        """
+
+        if interaction.channel.id != self.config["logging"]["commands-channel-id"]:
+            return
+        
+        self.config["logging"]["members-joins-channel-id"] = channel.id
+
+        with open(self.path, 'w', encoding="UTF-8") as config_file:
+            json.dump(self.config, config_file, indent=4)
+
+        await interaction.response.send_message("Changed", ephemeral=True)
+
+    async def set_leaves_channel(self, interaction: discord.Interaction, channel: discord.TextChannel):
+        """
+        Sets manually leaves channel
+
+        :param interaction: interaction object
+        :type interaction: discord.Interaction
+        :param channel: channel to be set as leaves channel
+        :type channel: discord.TextChannel
+        """
+
+        if interaction.channel.id != self.config["logging"]["commands-channel-id"]:
+            return
+        
+        self.config["logging"]["members-leaves-channel-id"] = channel.id
+
+        with open(self.path, 'w', encoding="UTF-8") as config_file:
+            json.dump(self.config, config_file, indent=4)
+
+        await interaction.response.send_message("Changed", ephemeral=True)
+
+    async def set_commands_channel(self, interaction: discord.Interaction, channel: discord.TextChannel):
+        """
+        Sets manually command channel
+
+        :param interaction: interaction object
+        :type interaction: discord.Interaction
+        :param channel: channel to be set as commands channel
+        :type channel: discord.TextChannel
+        """
+
+        if not interaction.user.guild_permissions.administrator:
+            return
+        
+        self.config["logging"]["commands-channel-id"] = channel.id
+
+        with open(self.path, 'w', encoding="UTF-8") as config_file:
+            json.dump(self.config, config_file, indent=4)
+
+        await interaction.response.send_message("Changed", ephemeral=True)
+
+    async def set_owner_role(self, interaction: discord.Interaction, role: discord.Role):
+        """
+        Sets role id to owner config 
+
+        :param interaction: interaction object
+        :type interaction: discord.Interaction
+        :param role: guild role to be set as owner
+        :type role: discord.Role
+        """
+        if interaction.channel.id != self.config["logging"]["commands-channel-id"]:
+            return
+
+        self.config["roles"]["owner-role-id"] = role.id
+
+        with open(self.path, 'w', encoding="UTF-8") as config_file:
+            json.dump(self.config, config_file, indent=4)
+
+        await interaction.response.send_message("Changed", ephemeral=True)
+
+    async def set_admin_role(self, interaction: discord.Interaction, role: discord.Role):
+        """
+        Sets role id to admin config 
+
+        :param interaction: interaction object
+        :type interaction: discord.Interaction
+        :param role: guild role to be set as admin
+        :type role: discord.Role
+        """
+        if interaction.channel.id != self.config["logging"]["commands-channel-id"]:
+            return
+
+        self.config["roles"]["admin-role-id"] = role.id
+
+        with open(self.path, 'w', encoding="UTF-8") as config_file:
+            json.dump(self.config, config_file, indent=4)
+
+        await interaction.response.send_message("Changed", ephemeral=True)
+
+    async def set_mod_role(self, interaction: discord.Interaction, role: discord.Role):
+        """
+        Sets role id to mod config 
+
+        :param interaction: interaction object
+        :type interaction: discord.Interaction
+        :param role: guild role to be set as mod
+        :type role: discord.Role
+        """
+
+        if interaction.channel.id != self.config["logging"]["commands-channel-id"]:
+            return
+
+        self.config["roles"]["mod-role-id"] = role.id
+
+        with open(self.path, 'w', encoding="UTF-8") as config_file:
+            json.dump(self.config, config_file, indent=4)
+
+        await interaction.response.send_message("Changed", ephemeral=True)
+    
+    async def set_logging_category(self, interaction: discord.Interaction, category: discord.CategoryChannel):
+        """
+        Sets manually logging category
+
+        :param interaction: interaction object
+        :type interaction: discord.Interaction
+        :param channel: category to be set as logging
+        :type channel: discord.CategoryChannel
+        """
+
+        if interaction.channel.id != self.config["logging"]["commands-channel-id"]:
+            return
+
+        self.config["logging"]["logging-channel-group-id"] = category.id
+
+        with open(self.path, 'w', encoding="UTF-8") as config_file:
+            json.dump(self.config, config_file, indent=4)
+
+        await interaction.response.send_message("Changed", ephemeral=True)

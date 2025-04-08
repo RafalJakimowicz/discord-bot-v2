@@ -1,19 +1,19 @@
 {
     "logging": {
-        "logging-channel-group-id": 0,
-        "members-joins-channel-id": 0,
-        "members-leaves-channel-id": 0,
-        "messages-stats-channel-id": 0,
-        "commands-channel-id": 0,
-        "admin-voice-channel": 0
+        "logging-channel-group-id": 1359208036228661369,
+        "members-joins-channel-id": 1359208042343960881,
+        "members-leaves-channel-id": 1359208044088787295,
+        "messages-stats-channel-id": 1359208038011240469,
+        "commands-channel-id": 1359208039433109704,
+        "admin-voice-channel": 1359208045795868672
     },
     "features": {
         "logging": true,
         "ai-chat": true
     },
     "roles": {
-        "mod-role-id": 0,
-        "admin-role-id": 0,
-        "owner-role-id": 0
+        "mod-role-id": 1359208033208500365,
+        "admin-role-id": 1359208034420920571,
+        "owner-role-id": 1359208035163045909
     }
 }

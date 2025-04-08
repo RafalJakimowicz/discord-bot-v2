@@ -53,7 +53,6 @@ class DiscordBot(commands.Bot):
         if(self.config["features"]["logging"] == True):
             for command in self.__admin.get_commands():
                 self.commands_list.append(command)
-            #self.commands_list = [*self.commands_list, self.__admin.get_commands()]
 
     
     async def ask_ai(self, interaction: discord.Interaction, query: str):
@@ -67,19 +66,3 @@ class DiscordBot(commands.Bot):
         )
 
         await interaction.followup.send(embed=embeded_message)
-
-    async def get_logs_by_name(self, interaction: discord.Interaction, username: str):
-        await interaction.response.defer(thinking=True)
-
-        response_str = ""
-        response_list = await self.__sql_database.get_messages_by_username(username=username)
-        for row in response_list:
-            response_str = response_str + str(row) + "\n"
-
-        embeded_messege = discord.Embed(
-            title="Database response",
-            description=f"logs for: {username} \n {response_str}",
-            color=discord.Color.from_rgb(46, 255, 137)
-        )
-
-        await interaction.followup.send(embed=embeded_messege)

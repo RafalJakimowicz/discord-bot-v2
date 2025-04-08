@@ -38,7 +38,6 @@ class Database:
         #create cursor fo executing
         self.cursor = self.connection.cursor()
 
-
     def create_connection(self):
         """
         Creates a connection to the PostgreSQL database using the provided credentials.
