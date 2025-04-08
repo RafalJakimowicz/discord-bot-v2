@@ -7,6 +7,9 @@ from ..database.postgres_database import Database
 import textwrap
 
 class AdminConfig():
+    """
+    Admin commands class to handle admin inteactions
+    """
     def __init__(self, bot: commands.Bot ,config: dict, config_path: str):
         self.bot = bot
         self.config = config
@@ -17,6 +20,9 @@ class AdminConfig():
         self.__sql = Database()
 
     def load_config(self):
+        """
+        Loads config from file to memory
+        """
         with open(self.path, 'r', encoding="UTF-8") as config_file:
             self.config = json.load(config_file)
 
@@ -107,7 +113,16 @@ class AdminConfig():
         )
     
     async def create_private_category(self, guild: discord.Guild, roles: list, *, category_name: str = "Logi"):
+        """
+        Creates private category for logging
 
+        :param guild: guild of category to be added
+        :type guild: discord.Guild
+        :param roles: roles to have access to this category
+        :type roles: list
+        :param category_name: category name default='Logi'
+        :type category_name: str
+        """
         overwrite = {
             guild.default_role: discord.PermissionOverwrite(view_channel=False)
         }
@@ -125,6 +140,10 @@ class AdminConfig():
 
         :param guild: guild for channels to be made
         :type guild: discord.Guild
+        :param category: category to channels be added to
+        :type category: discord.CategoryChannel
+        :return: data in format ([text channels],[voice channels])
+        :rtype: tuple
         """
         name_of_stats_channel = "Statystyki"
         name_of_commands_channel = "Komendy"
@@ -206,7 +225,7 @@ class AdminConfig():
     
     async def quick_setup(self, interaction: discord.Interaction):
         """
-        Makes default quick setup for logging channels and basic roles
+        Makes default quick setup for logging channels and basic roles and sends return message to user
 
         :param interaction: interaction object 
         :type interaction: discord.Interaction
@@ -300,6 +319,8 @@ class AdminConfig():
 
         :param interaction: interaction object with member
         :type interaction: discord.Interaction
+        :param username: member username to get logs
+        :type username: str
         """
         await interaction.response.defer(thinking=True)
 
