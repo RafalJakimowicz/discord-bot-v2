@@ -6,19 +6,6 @@ import json
 
 config_path = 'config.json'
 
-config={
-    "logging" : {
-        "members-logging-channel": "",
-        "messages-logging-channel": ""
-    },
-
-    "features": {
-        "members-logging": False,
-        "messages-logging": False,
-        "ai-chat": False
-    }
-}
-
 with open(config_path, 'r', encoding='utf-8') as file:
     config = json.load(file)
 
