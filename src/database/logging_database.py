@@ -156,8 +156,6 @@ class Database:
         
         :param message_id: The unique identifier for the message.
         :type message_id: int
-        :param guild_name: The guild name from which to retrieve the message; it determines the table name.
-        :type guild_name: str
         :return: A list of tuples, each representing a matching message record.
         :rtype: list
         """
@@ -170,6 +168,31 @@ class Database:
 
         try:
             self.cursor.execute(SELECT_BY_ID_QUERY, (message_id,))
+            result = self.cursor.fetchall()
+        except Exception as e:
+            print("error: " + str(e))
+            self.connection.rollback()
+
+        return result
+    
+    async def get_member_by_id(self, memeber_id: int) -> list:
+        """
+        Retrieves a member record from the messages table based on its member_id.
+        
+        :param member_id: The unique identifier for the member.
+        :type member_id: int
+        :return: A list of tuples, each representing a matching member record.
+        :rtype: list
+        """
+
+        table_messages_name = f'members'
+
+        SELECT_BY_ID_QUERY = sql.SQL("SELECT * FROM {} WHERE message_id = %s").format(sql.Identifier(table_messages_name))
+
+        result = []
+
+        try:
+            self.cursor.execute(SELECT_BY_ID_QUERY, (memeber_id,))
             result = self.cursor.fetchall()
         except Exception as e:
             print("error: " + str(e))

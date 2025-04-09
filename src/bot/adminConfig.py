@@ -38,57 +38,68 @@ class AdminConfig():
             app_commands.Command(
                 name="member-logs",
                 description="get logs by member username",
-                callback=self.get_logs_by_name
+                callback=self.get_logs_by_name,
+                default_member_permissions=discord.Permissions(administrator=True)
             ),
             app_commands.Command(
                 name="quick-setup",
                 description="makes quick setup for basic logging channels and roles",
-                callback=self.quick_setup
+                callback=self.quick_setup,
+                default_member_permissions=discord.Permissions(administrator=True)
             ),
             app_commands.Command(
                 name="remove-logging",
                 description="remove logging channels and role creted by bot",
-                callback=self.remove_setup_channels
+                callback=self.remove_setup_channels,
+                default_member_permissions=discord.Permissions(administrator=True)
             ),
             app_commands.Command(
                 name="set-stats-channel",
                 description="sets stats channel",
-                callback=self.set_stats_channel
+                callback=self.set_stats_channel,
+                default_member_permissions=discord.Permissions(administrator=True)
             ),
             app_commands.Command(
                 name="set-joins-channel",
                 description="sets joins channel",
-                callback=self.set_joins_channel
+                callback=self.set_joins_channel,
+                default_member_permissions=discord.Permissions(administrator=True)
             ),
             app_commands.Command(
                 name="set-leaves-channel",
                 description="sets leaves channel",
-                callback=self.set_leaves_channel
+                callback=self.set_leaves_channel,
+                default_member_permissions=discord.Permissions(administrator=True)
             ),
             app_commands.Command(
                 name="set-commands-channel",
                 description="sets commands channel",
-                callback=self.set_commands_channel
+                callback=self.set_commands_channel,
+                default_member_permissions=discord.Permissions(administrator=True)
             ),
             app_commands.Command(
                 name="set-logging-category",
                 description="sets logging category",
-                callback=self.set_logging_category
+                callback=self.set_logging_category,
+                default_member_permissions=discord.Permissions(administrator=True)
             ),
             app_commands.Command(
                 name="set-to-owner",
                 description="sets role as owner",
-                callback=self.set_owner_role
+                callback=self.set_owner_role,
+                default_member_permissions=discord.Permissions(administrator=True)
             ),
             app_commands.Command(
                 name="set-to-admin",
                 description="sets role as admin",
-                callback=self.set_admin_role
+                callback=self.set_admin_role,
+                default_member_permissions=discord.Permissions(administrator=True)
             ),
             app_commands.Command(
                 name="set-to-mod",
                 description="sets role as mod",
-                callback=self.set_mod_role
+                callback=self.set_mod_role,
+                default_member_permissions=discord.Permissions(administrator=True)
             )
         ]
         return self.commands_list
