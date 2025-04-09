@@ -8,6 +8,9 @@ class MembersCog(commands.Cog):
         self.bot = bot
         self.__sql = Database()
 
+        for user in self.bot.guilds[0].members:
+            self.__sql.add_member_to_database(user)
+
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):
         if member == self.bot.user:

@@ -1,7 +1,6 @@
 import discord
 from discord.ext import commands
 from discord import app_commands
-from ..database.postgres_database import Database
 from ..aichat.chatbot import AiChat
 from .messagesCog import MessagesCog
 from .membersCog import MembersCog
@@ -12,7 +11,6 @@ class DiscordBot(commands.Bot):
         super().__init__(command_prefix=command_prefix, intents=intents)
         self.config = config
         self.path = config_path
-        self.__sql_database = Database()
         self.__admin = AdminConfig(
             bot=self,
             config=self.config,
@@ -27,12 +25,6 @@ class DiscordBot(commands.Bot):
         if(self.config["features"]["logging"] == True):
             await self.add_cog(MessagesCog(self))
             await self.add_cog(MembersCog(self))
-
-
-        #init database
-        self.__sql_database.init_table()
-        for user in self.guilds[0].members:
-            await self.__sql_database.add_member_to_database(user)
 
     async def setup_hook(self):
         for command in self.commands_list:
