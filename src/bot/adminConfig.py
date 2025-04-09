@@ -2,8 +2,7 @@ import discord
 import json
 from discord.ext import commands
 from discord import app_commands
-from datetime import datetime
-from ..database.postgres_database import Database
+from ..database.logging_database import Database
 import textwrap
 
 class AdminConfig():

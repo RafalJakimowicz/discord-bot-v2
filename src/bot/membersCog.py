@@ -1,10 +1,11 @@
 import discord
 from discord.ext import commands
 from datetime import datetime
-from ..database.postgres_database import Database
+from ..database.logging_database import Database
 
 class MembersCog(commands.Cog):
-    def __init__(self, bot):
+    def __init__(self, bot, config: dict):
+        self.config = config
         self.bot = bot
         self.__sql = Database()
 
@@ -16,6 +17,15 @@ class MembersCog(commands.Cog):
         if member == self.bot.user:
             return
         
+        for channel in member.guild.channels:
+            if channel.id == self.config["logging"]["members-joins-channel-id"]:
+                embed = discord.Embed(
+                    title=f"Przyleciał {member.global_name}",
+                    description=f"Data :{str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))}",
+                    color=discord.Color.green
+                )
+                channel.send(embed=embed)
+        
         await self.__sql.add_member_to_database(member=member)
         await self.__sql.track_member_joins_and_leaves(member, True, False, str(datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
 
@@ -23,6 +33,15 @@ class MembersCog(commands.Cog):
     async def on_member_remove(self, member: discord.Member):
         if member == self.bot.user:
             return
+        
+        for channel in member.guild.channels:
+            if channel.id == self.config["logging"]["members-leaves-channel-id"]:
+                embed = discord.Embed(
+                    title=f"Odleciał {member.global_name}",
+                    description=f"Data :{str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))}",
+                    color=discord.Color.green
+                )
+                channel.send(embed=embed)
         
         await self.__sql.track_member_joins_and_leaves(member, False, True, str(datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
 

@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 from datetime import datetime
-from ..database.postgres_database import Database
+from ..database.logging_database import Database
 
 
 class MessagesCog(commands.Cog):
