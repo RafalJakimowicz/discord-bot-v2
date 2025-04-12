@@ -399,6 +399,49 @@ class Database:
             print("error: " + str(e))
             self.connection.rollback()
 
+    async def get_all_statuses(self) -> list:
+        """
+        Gets all joins and leaves from database
+
+        :return: list of all rows
+        :rtype: list
+        """
+        table_name = "member_joins_leaves"
+
+        GET_QUERY = sql.SQL("SELECT * FROM {}").format(sql.Identifier(table_name))
+
+        result = []
+
+        try:
+            self.cursor.execute(GET_QUERY)
+            result = self.cursor.fetchall()
+        except Exception as e:
+            print("error: " + str(e))
+            self.connection.rollback()
+
+        return result
+    
+    async def get_all_members(self) -> list:
+        """
+        Gets all members from database
+
+        :return: list of all rows
+        :rtype: list
+        """
+        table_name = "members"
+
+        GET_QUERY = sql.SQL("SELECT * FROM {}").format(sql.Identifier(table_name))
+
+        result = []
+
+        try:
+            self.cursor.execute(GET_QUERY)
+            result = self.cursor.fetchall()
+        except Exception as e:
+            print("error: " + str(e))
+            self.connection.rollback()
+
+        return result
 
 
 

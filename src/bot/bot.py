@@ -7,6 +7,8 @@ from .membersCog import MembersCog
 from .adminConfig import AdminConfig
 
 class DiscordBot(commands.Bot):
+    
+
     def __init__(self, command_prefix, intents, config: dict, config_path: str):
         super().__init__(command_prefix=command_prefix, intents=intents)
         self.config = config

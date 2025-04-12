@@ -22,7 +22,7 @@ class MembersCog(commands.Cog):
             if channel.id == self.config["logging"]["members-joins-channel-id"]:
                 embed = discord.Embed(
                     title=f"Przyleciał {member.global_name}",
-                    color=discord.Color.green
+                    color=discord.Color.green()
                 )
                 embed.add_field(name="Id", value=str(member.id), inline=False)
                 embed.add_field(name="Data",value=str(datetime.now().strftime("%Y-%m-%d %H:%M:%S")), inline=False)
@@ -41,7 +41,7 @@ class MembersCog(commands.Cog):
             if channel.id == self.config["logging"]["members-leaves-channel-id"]:
                 embed = discord.Embed(
                     title=f"Odleciał {member.global_name}",
-                    color=discord.Color.green
+                    color=discord.Color.red()
                 )
                 embed.add_field(name="Id", value=str(member.id), inline=False)
                 embed.add_field(name="Data",value=str(datetime.now().strftime("%Y-%m-%d %H:%M:%S")), inline=False)
