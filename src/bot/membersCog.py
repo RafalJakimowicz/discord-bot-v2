@@ -5,7 +5,7 @@ from datetime import datetime
 from ..database.logging_database import Database
 
 class MembersCog(commands.Cog):
-    def __init__(self, bot, config: dict):
+    def __init__(self, bot: commands.bot, config: dict):
         self.config = config
         self.bot = bot
         self.__sql = Database()
@@ -60,6 +60,47 @@ class MembersCog(commands.Cog):
     @app_commands.command(name="members-stat", description="sends stats to channel")
     @app_commands.default_permissions(administrator=True)
     async def send_stats(self, interaction: discord.Interaction):
-        pass
+        leaves = []
+        joins = []
+        members = []
+
+        members = self.__sql.get_all_members()
+        statuses_result = self.__sql.get_all_statuses()
+
+        for status in statuses_result:
+            if status[3] == True: #join
+                joins.append(status)
+            if status[4] == True: #leaves
+                leaves.append(status)
+
+        last_join = await self.bot.fetch_user(joins[-1])
+        last_leave = await self.bot.fetch_user(leaves[-1])
+
+
+        #Embed z statystykami 
+        embed_stats = discord.Embed(
+            title="Stats",
+            color=discord.Color.blue()
+        )
+        embed_stats.add_field(
+            name="Ilość członków",
+            value=len(members)
+        )
+        embed_stats.add_field(
+            name="Wszystkie Przyloty",
+            value=len(joins)
+        )
+        embed_stats.add_field(
+            name="Wszystkie Odloty",
+            value=len(leaves)
+        )
+
+        #Embed z ostatnim odlotem
+
+        #Embed z osttanim przylotem
+
+
+
+
 
     
