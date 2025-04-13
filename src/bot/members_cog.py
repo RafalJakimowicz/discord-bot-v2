@@ -60,6 +60,7 @@ class MembersCog(commands.Cog):
     @app_commands.command(name="members-stat", description="sends stats to channel")
     @app_commands.default_permissions(administrator=True)
     async def send_stats(self, interaction: discord.Interaction):
+        await interaction.response.defer(thinking=True)
         leaves = []
         joins = []
         members = []
@@ -79,7 +80,7 @@ class MembersCog(commands.Cog):
 
         #Embed z statystykami 
         embed_stats = discord.Embed(
-            title="Stats",
+            title="Statystyki",
             color=discord.Color.blue()
         )
         embed_stats.add_field(
@@ -96,8 +97,43 @@ class MembersCog(commands.Cog):
         )
 
         #Embed z ostatnim odlotem
+        embed_leave = discord.Embed(
+            title=f"Ostatni odlot gracza {last_leave.global_name}",
+            color=discord.Color.red()
+        )
+        embed_leave.add_field(
+            name="Id",
+            value=last_leave.id
+        )
+        embed_leave.add_field(
+            name='Data',
+            value=leaves[-1][2]
+        )
+        embed_leave.set_thumbnail(url=last_leave.display_avatar.url)
+        
 
         #Embed z osttanim przylotem
+        embed_join = discord.Embed(
+            title=f"Ostatni przylot gracza {last_join.global_name}",
+            color=discord.Color.red()
+        )
+        embed_join.add_field(
+            name="Id",
+            value=last_join.id
+        )
+        embed_join.add_field(
+            name='Data',
+            value=joins[-1][2]
+        )
+        embed_join.set_thumbnail(url=last_join.display_avatar.url)
+
+        await interaction.followup.send(
+            embeds=[
+                embed_stats,
+                embed_leave,
+                embed_join
+            ]
+        )
 
 
 

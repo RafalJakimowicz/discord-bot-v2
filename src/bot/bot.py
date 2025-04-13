@@ -2,9 +2,9 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 from ..aichat.chatbot import AiChat
-from .messagesCog import MessagesCog
-from .membersCog import MembersCog
-from .adminConfig import AdminConfig
+from .messages_cog import MessagesCog
+from .members_cog import MembersCog
+from .admin_config import AdminConfig
 
 class DiscordBot(commands.Bot):
     
