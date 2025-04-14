@@ -1,7 +1,7 @@
 --create table for notes [0]
 CREATE TABLE IF NOT EXISTS notes(
     id SERIAL PRIMARY KEY,
-    note_id UNIQUE BIGINT,
+    note_id BIGINT UNIQUE,
     author_id BIGINT,
     title TEXT,
     content TEXT,
@@ -41,3 +41,6 @@ SELECT * FROM notes WHERE note_id = %s;
 
 --get note id by user id [5]
 SELECT * FROM notes_users WHERE member_id = %s;
+
+--get note users by note id [6]
+SELECT * FROM notes WHERE note_id = %s;

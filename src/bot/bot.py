@@ -5,6 +5,7 @@ from ..aichat.chatbot import AiChat
 from .messages_cog import MessagesCog
 from .members_cog import MembersCog
 from .admin_config import AdminConfig
+from .notes_cog import NotesCog
 
 class DiscordBot(commands.Bot):
     
@@ -26,7 +27,12 @@ class DiscordBot(commands.Bot):
 
         if(self.config["features"]["logging"] == True):
             await self.add_cog(MessagesCog(self))
-            await self.add_cog(MembersCog(self))
+            await self.add_cog(MembersCog(self, self.config))
+
+        if(self.config["features"]["notes"] == True):
+            await self.add_cog(NotesCog(self))
+
+        await self.tree.sync()
 
     async def setup_hook(self):
         for command in self.commands_list:

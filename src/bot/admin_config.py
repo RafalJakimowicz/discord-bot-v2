@@ -2,7 +2,7 @@ import discord
 import json
 from discord.ext import commands
 from discord import app_commands
-from ..database.logging_database import Database
+from ..database.logging_database import Logging_Database
 import textwrap
 
 class AdminConfig():
@@ -16,7 +16,7 @@ class AdminConfig():
         self.config = {}
         self.load_config()
         self.commands_list = []
-        self.__sql = Database()
+        self.__sql = Logging_Database()
 
     def load_config(self):
         """
@@ -38,68 +38,57 @@ class AdminConfig():
             app_commands.Command(
                 name="member-logs",
                 description="get logs by member username",
-                callback=self.get_logs_by_name,
-                default_member_permissions=discord.Permissions(administrator=True)
+                callback=self.get_logs_by_name
             ),
             app_commands.Command(
                 name="quick-setup",
                 description="makes quick setup for basic logging channels and roles",
-                callback=self.quick_setup,
-                default_member_permissions=discord.Permissions(administrator=True)
+                callback=self.quick_setup
             ),
             app_commands.Command(
                 name="remove-logging",
                 description="remove logging channels and role creted by bot",
-                callback=self.remove_setup_channels,
-                default_member_permissions=discord.Permissions(administrator=True)
+                callback=self.remove_setup_channels
             ),
             app_commands.Command(
                 name="set-stats-channel",
                 description="sets stats channel",
-                callback=self.set_stats_channel,
-                default_member_permissions=discord.Permissions(administrator=True)
+                callback=self.set_stats_channel
             ),
             app_commands.Command(
                 name="set-joins-channel",
                 description="sets joins channel",
-                callback=self.set_joins_channel,
-                default_member_permissions=discord.Permissions(administrator=True)
+                callback=self.set_joins_channel
             ),
             app_commands.Command(
                 name="set-leaves-channel",
                 description="sets leaves channel",
-                callback=self.set_leaves_channel,
-                default_member_permissions=discord.Permissions(administrator=True)
+                callback=self.set_leaves_channel
             ),
             app_commands.Command(
                 name="set-commands-channel",
                 description="sets commands channel",
-                callback=self.set_commands_channel,
-                default_member_permissions=discord.Permissions(administrator=True)
+                callback=self.set_commands_channel
             ),
             app_commands.Command(
                 name="set-logging-category",
                 description="sets logging category",
-                callback=self.set_logging_category,
-                default_member_permissions=discord.Permissions(administrator=True)
+                callback=self.set_logging_category
             ),
             app_commands.Command(
                 name="set-to-owner",
                 description="sets role as owner",
-                callback=self.set_owner_role,
-                default_member_permissions=discord.Permissions(administrator=True)
+                callback=self.set_owner_role
             ),
             app_commands.Command(
                 name="set-to-admin",
                 description="sets role as admin",
-                callback=self.set_admin_role,
-                default_member_permissions=discord.Permissions(administrator=True)
+                callback=self.set_admin_role
             ),
             app_commands.Command(
                 name="set-to-mod",
                 description="sets role as mod",
-                callback=self.set_mod_role,
-                default_member_permissions=discord.Permissions(administrator=True)
+                callback=self.set_mod_role
             )
         ]
         return self.commands_list

@@ -13,8 +13,8 @@ class Note:
     title: str
     content: str
     creation_date: str
-    author_id: discord.Member
-    members: list[discord.Member]
+    author_id: int
+    members_ids: list[int]
 
 class Notes_Database():
     def __init__(self):
@@ -41,7 +41,9 @@ class Notes_Database():
         #create cursor fo executing
         self.cursor = self.connection.cursor()
 
-        self.queries = self.load_queries('sql\\notes_queries.sql')
+        self.queries = self.load_queries("src/database/sql/notes_queries.sql")
+
+        self.init_tables()
 
 
     def create_connection(self):
@@ -93,25 +95,28 @@ class Notes_Database():
                 note.creation_date
             )
             self.cursor.execute(self.queries[2], params)
-            for member in note.members:
-                self.cursor.execute(self.queries[3], (member.id, note.note_id))
+            self.cursor.execute(self.queries[3], (note.author_id, note.note_id))
+            for member in note.members_ids:
+                if member:
+                    self.cursor.execute(self.queries[3], (member, note.note_id))
             self.connection.commit()
         except Exception as e:
             print("error: " + str(e))
             self.connection.commit()
 
-    async def get_all_member_notes(self, member: discord.Member) -> list:
+    async def get_all_member_notes(self, member: discord.Member) -> list[Note]:
         notes = []
         notes_ids = []
 
         try:
             self.cursor.execute(self.queries[5], (member.id,))
             notes_ids = self.cursor.fetchall()
-            for nid in notes_ids:
-                self.cursor.execute(self.queries[4], (nid[2],))
-                notes.append(self.cursor.fetchone())
+            for id_tuple in notes_ids:
+                nid = id_tuple[2]
+                print(f"nid: {nid}")
+                notes.append(await self.get_note_by_id(nid))
         except Exception as e:
-            print("error: " + str(e))
+            print("error: " + __name__ + str(e))
             self.connection.rollback()
 
         return notes
@@ -119,7 +124,23 @@ class Notes_Database():
     async def get_note_by_id(self, id: int) -> tuple:
         try:
             self.cursor.execute(self.queries[4], (id,))
-            return self.cursor.fetchone()
+            note = self.cursor.fetchone()
+            self.cursor.execute(self.queries[6], (id,))
+            note_members = self.cursor.fetchall()
+            members_ids = []
+            for m in note_members:
+                members_ids.append(m[1])
+
+            note_obj = Note(
+                note_id=note[1],
+                author_id=note[2],
+                title=note[3],
+                content=note[4],
+                creation_date=note[5],
+                members_ids=members_ids
+            )
+
+            return note_obj
         except Exception as e:
-            print("error: " + str(e))
+            print("error: "  + str(e))
             self.connection.rollback()

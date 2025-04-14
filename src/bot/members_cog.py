@@ -5,7 +5,7 @@ from datetime import datetime
 from ..database.logging_database import Logging_Database
 
 class MembersCog(commands.Cog):
-    def __init__(self, bot: commands.bot, config: dict):
+    def __init__(self, bot: commands.Bot, config: dict):
         self.config = config
         self.bot = bot
         self.__sql = Logging_Database()
@@ -29,7 +29,7 @@ class MembersCog(commands.Cog):
                 embed.set_thumbnail(url=member.display_avatar.url)
                 channel.send(embed=embed)
         
-        await self.__sql.add_member_to_database(member=member)
+        self.__sql.add_member_to_database(member=member)
         await self.__sql.track_member_joins_and_leaves(member, True, False, str(datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
 
     @commands.Cog.listener()

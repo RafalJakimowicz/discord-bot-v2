@@ -5,7 +5,7 @@ from ..database.logging_database import Logging_Database
 
 
 class MessagesCog(commands.Cog):
-    def __init__(self, bot):
+    def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.__sql = Logging_Database()
 

@@ -269,7 +269,7 @@ class Logging_Database:
             print(f"error: {e}")
             self.connection.rollback()
              
-    async def add_member_to_database(self, member: discord.Member):
+    def add_member_to_database(self, member: discord.Member):
         """
         Inserts a new member record into the members table for a specific guild.
         
