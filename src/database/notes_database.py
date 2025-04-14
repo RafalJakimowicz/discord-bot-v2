@@ -9,6 +9,22 @@ from dataclasses import dataclass
 
 @dataclass
 class Note:
+    """
+    Struct type, Note object have all information of note inside 
+
+    :param note_id: id of note rn 6 digit
+    :type note_id: int
+    :param title: title on note 
+    :type title: str
+    :param content: all of text inside the note
+    :type content: str
+    :param creation_date: time of creating note formatted as string
+    :type creation_date: str
+    :param author_id: id of author of note
+    :type author_id: int
+    :param members_ids: list of all members to be part of note
+    :type members_ids: list[int]
+    """
     note_id: int
     title: str
     content: str
@@ -70,13 +86,21 @@ class Notes_Database():
         return connection
     
     def load_queries(self, filename: str):
+        """
+        loads queries from .sql file
+
+        """
         queries = []
         with open(filename, 'r') as file:
             queries = file.read().split(';')
 
         return queries
     
-    def init_tables(self):      
+    def init_tables(self):   
+        """
+        Inits tables for notes
+
+        """   
         try:
             self.cursor.execute(self.queries[0])
             self.cursor.execute(self.queries[1])
@@ -86,6 +110,12 @@ class Notes_Database():
             self.connection.commit()
 
     async def add_note(self, note: Note):
+        """
+        Ads note object to database, and ads every additional user to table to be written in note
+
+        :param note: Note object to be added to db
+        :type note: Note
+        """
         try:
             params = (
                 note.note_id,
@@ -95,7 +125,11 @@ class Notes_Database():
                 note.creation_date
             )
             self.cursor.execute(self.queries[2], params)
+
+            #adding author of note
             self.cursor.execute(self.queries[3], (note.author_id, note.note_id))
+
+            #adding rest of members in note
             for member in note.members_ids:
                 if member:
                     self.cursor.execute(self.queries[3], (member, note.note_id))
@@ -105,6 +139,14 @@ class Notes_Database():
             self.connection.commit()
 
     async def get_all_member_notes(self, member: discord.Member) -> list[Note]:
+        """
+        gets all roles from members that use this commmand
+
+        :param member:
+        :type member: discord.Member
+        :returns: list of notes belonging to member
+        :rtype: list[Note]
+        """
         notes = []
         notes_ids = []
 
@@ -121,16 +163,27 @@ class Notes_Database():
 
         return notes
     
-    async def get_note_by_id(self, id: int) -> tuple:
+    async def get_note_by_id(self, id: int) -> Note:
+        """
+        gets note nad all members of this note
+
+        :param id: note id
+        :type id: int
+        """
         try:
+            #get note 
             self.cursor.execute(self.queries[4], (id,))
             note = self.cursor.fetchone()
+
+            #gets members of note
             self.cursor.execute(self.queries[6], (id,))
             note_members = self.cursor.fetchall()
             members_ids = []
+            #adds members ids to list
             for m in note_members:
                 members_ids.append(m[1])
 
+            #create note object to be returned
             note_obj = Note(
                 note_id=note[1],
                 author_id=note[2],

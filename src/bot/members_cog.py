@@ -65,8 +65,8 @@ class MembersCog(commands.Cog):
         joins = []
         members = []
 
-        members = self.__sql.get_all_members()
-        statuses_result = self.__sql.get_all_statuses()
+        members = await self.__sql.get_all_members()
+        statuses_result = await self.__sql.get_all_statuses()
 
         for status in statuses_result:
             if status[3] == True: #join
@@ -74,8 +74,9 @@ class MembersCog(commands.Cog):
             if status[4] == True: #leaves
                 leaves.append(status)
 
-        last_join = await self.bot.fetch_user(joins[-1])
-        last_leave = await self.bot.fetch_user(leaves[-1])
+
+        last_join = await self.bot.fetch_user(joins[len(joins)-1][1])
+        last_leave = await self.bot.fetch_user(leaves[-1][1])
 
 
         #Embed z statystykami 
@@ -115,7 +116,7 @@ class MembersCog(commands.Cog):
         #Embed z osttanim przylotem
         embed_join = discord.Embed(
             title=f"Ostatni przylot gracza {last_join.global_name}",
-            color=discord.Color.red()
+            color=discord.Color.green()
         )
         embed_join.add_field(
             name="Id",

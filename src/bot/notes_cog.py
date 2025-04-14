@@ -38,8 +38,28 @@ class NotesCog(commands.Cog):
         for note in notes:
             embed.add_field(
                 name=f"Notatka: {note.note_id}",
-                value=note.title,
-                inline=True
+                value=f"Tytuł: {note.title}",
+                inline=False
             )
 
+        await interaction.followup.send(embed=embed)
+
+    @app_commands.command(name="get-note", description="gets note by id")
+    async def get_user_note(self, interaction: discord.Interaction, note_id: int):
+        await interaction.response.defer(thinking=True)
+        note = await self.__sql.get_note_by_id(note_id)
+        embed = discord.Embed(
+            title=f"Notatka: {note.note_id}",
+            color=discord.Color.dark_gold()
+        )
+        embed.add_field(
+            name=note.title,
+            value=note.content,
+            inline=False
+        )
+        embed.add_field(
+            name="Data",
+            value=note.creation_date,
+            inline=False
+        )
         await interaction.followup.send(embed=embed)

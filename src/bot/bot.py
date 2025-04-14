@@ -28,6 +28,7 @@ class DiscordBot(commands.Bot):
         if(self.config["features"]["logging"] == True):
             await self.add_cog(MessagesCog(self))
             await self.add_cog(MembersCog(self, self.config))
+            await self.add_cog(AdminConfig(self, self.config, self.path))
 
         if(self.config["features"]["notes"] == True):
             await self.add_cog(NotesCog(self))
@@ -49,10 +50,6 @@ class DiscordBot(commands.Bot):
                     callback=self.ask_ai
                 )
             )
-
-        if(self.config["features"]["logging"] == True):
-            for command in self.__admin.get_commands():
-                self.commands_list.append(command)
 
     
     async def ask_ai(self, interaction: discord.Interaction, query: str):

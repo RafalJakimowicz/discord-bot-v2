@@ -5,7 +5,7 @@ from discord import app_commands
 from ..database.logging_database import Logging_Database
 import textwrap
 
-class AdminConfig():
+class AdminConfig(commands.Cog):
     """
     Admin commands class to handle admin inteactions
     """
@@ -15,7 +15,6 @@ class AdminConfig():
         self.path = config_path
         self.config = {}
         self.load_config()
-        self.commands_list = []
         self.__sql = Logging_Database()
 
     def load_config(self):
@@ -26,72 +25,6 @@ class AdminConfig():
             self.config = json.load(config_file)
 
         print(str(self.config))
-
-    def get_commands(self) -> list:
-        """
-        Gets admin commands to bot parent object 
-
-        :return: commands list
-        :rtype: list
-        """
-        self.commands_list = [
-            app_commands.Command(
-                name="member-logs",
-                description="get logs by member username",
-                callback=self.get_logs_by_name
-            ),
-            app_commands.Command(
-                name="quick-setup",
-                description="makes quick setup for basic logging channels and roles",
-                callback=self.quick_setup
-            ),
-            app_commands.Command(
-                name="remove-logging",
-                description="remove logging channels and role creted by bot",
-                callback=self.remove_setup_channels
-            ),
-            app_commands.Command(
-                name="set-stats-channel",
-                description="sets stats channel",
-                callback=self.set_stats_channel
-            ),
-            app_commands.Command(
-                name="set-joins-channel",
-                description="sets joins channel",
-                callback=self.set_joins_channel
-            ),
-            app_commands.Command(
-                name="set-leaves-channel",
-                description="sets leaves channel",
-                callback=self.set_leaves_channel
-            ),
-            app_commands.Command(
-                name="set-commands-channel",
-                description="sets commands channel",
-                callback=self.set_commands_channel
-            ),
-            app_commands.Command(
-                name="set-logging-category",
-                description="sets logging category",
-                callback=self.set_logging_category
-            ),
-            app_commands.Command(
-                name="set-to-owner",
-                description="sets role as owner",
-                callback=self.set_owner_role
-            ),
-            app_commands.Command(
-                name="set-to-admin",
-                description="sets role as admin",
-                callback=self.set_admin_role
-            ),
-            app_commands.Command(
-                name="set-to-mod",
-                description="sets role as mod",
-                callback=self.set_mod_role
-            )
-        ]
-        return self.commands_list
     
     async def make_mod_role(self, guild: discord.Guild) -> discord.Role:
         """
@@ -218,6 +151,7 @@ class AdminConfig():
 
         return ([stats_channel,commands_channel,joins_channel, leaves_channel],[voice_channel])
 
+    @app_commands.command(name="remove-logging", description="removes channels and roles specify in config")
     async def remove_setup_channels(self, interaction: discord.Interaction):
         """
         Removes all channels and roles created by bot
@@ -254,6 +188,7 @@ class AdminConfig():
             await interaction.followup.send("Incorect role")
             return
     
+    @app_commands.command(name="quick-setup", description="sets automatic channels and roles for logging")
     async def quick_setup(self, interaction: discord.Interaction):
         """
         Makes default quick setup for logging channels and basic roles and sends return message to user
@@ -344,6 +279,7 @@ class AdminConfig():
 
         await interaction.followup.send(embed=embed)
 
+    @app_commands.command(name="get-logs", description="get member logs")
     async def get_logs_by_name(self, interaction: discord.Interaction, member: discord.Member):
         """
         Send response message with logs to user
@@ -375,6 +311,7 @@ class AdminConfig():
 
         await interaction.followup.send(embed=embeded_messege)
 
+    @app_commands.command(name="set-stats-channel", description="sets existing channel as stats")
     async def set_stats_channel(self, interaction: discord.Interaction, channel: discord.TextChannel):
         """
         Sets manually stats channel
@@ -395,6 +332,7 @@ class AdminConfig():
 
         await interaction.response.send_message("Changed", ephemeral=True)
 
+    @app_commands.command(name="set-joins-channel", description="sets existing channel as joins")
     async def set_joins_channel(self, interaction: discord.Interaction, channel: discord.TextChannel):
         """
         Sets manually joins channel
@@ -415,6 +353,7 @@ class AdminConfig():
 
         await interaction.response.send_message("Changed", ephemeral=True)
 
+    @app_commands.command(name="set-leaves-channel", description="sets existing channel as leaves")
     async def set_leaves_channel(self, interaction: discord.Interaction, channel: discord.TextChannel):
         """
         Sets manually leaves channel
@@ -435,6 +374,7 @@ class AdminConfig():
 
         await interaction.response.send_message("Changed", ephemeral=True)
 
+    @app_commands.command(name="set-commands-channel", description="sets existing channel as commands")
     async def set_commands_channel(self, interaction: discord.Interaction, channel: discord.TextChannel):
         """
         Sets manually command channel
@@ -455,6 +395,7 @@ class AdminConfig():
 
         await interaction.response.send_message("Changed", ephemeral=True)
 
+    @app_commands.command(name="set-owner-role", description="sets existing role to owner")
     async def set_owner_role(self, interaction: discord.Interaction, role: discord.Role):
         """
         Sets role id to owner config 
@@ -474,6 +415,7 @@ class AdminConfig():
 
         await interaction.response.send_message("Changed", ephemeral=True)
 
+    @app_commands.command(name="set-admin-role", description="sets existing role to admin")
     async def set_admin_role(self, interaction: discord.Interaction, role: discord.Role):
         """
         Sets role id to admin config 
@@ -493,6 +435,7 @@ class AdminConfig():
 
         await interaction.response.send_message("Changed", ephemeral=True)
 
+    @app_commands.command(name="set-mod-role", description="sets existing role as mod")
     async def set_mod_role(self, interaction: discord.Interaction, role: discord.Role):
         """
         Sets role id to mod config 
@@ -513,6 +456,7 @@ class AdminConfig():
 
         await interaction.response.send_message("Changed", ephemeral=True)
     
+    @app_commands.command(name="set-logging-catetgory", description="as it says in name")
     async def set_logging_category(self, interaction: discord.Interaction, category: discord.CategoryChannel):
         """
         Sets manually logging category
