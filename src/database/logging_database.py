@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 from pathlib import Path
 import os
 
-class Database:
+class Logging_Database:
     """
     A class for managing PostgreSQL database operations related to a Discord bot's data.
     
@@ -16,9 +16,9 @@ class Database:
 
     def __init__(self):
         """
-        Initializes the Database object.
+        Initializes the Logging_Database object.
         
-        Loads environment variables from a .env file, which should contain the database credentials.
+        Loads environment variables from a .env file, which contain the database credentials.
         Establishes a connection to the PostgreSQL database and creates a cursor for executing queries.
         """
 

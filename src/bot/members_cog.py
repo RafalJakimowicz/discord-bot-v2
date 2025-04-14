@@ -2,13 +2,13 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 from datetime import datetime
-from ..database.logging_database import Database
+from ..database.logging_database import Logging_Database
 
 class MembersCog(commands.Cog):
     def __init__(self, bot: commands.bot, config: dict):
         self.config = config
         self.bot = bot
-        self.__sql = Database()
+        self.__sql = Logging_Database()
 
         for user in self.bot.guilds[0].members:
             self.__sql.add_member_to_database(user)

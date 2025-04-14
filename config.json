@@ -9,7 +9,8 @@
     },
     "features": {
         "logging": true,
-        "ai-chat": true
+        "ai-chat": true,
+        "notes": true
     },
     "roles": {
         "mod-role-id": 1359208033208500365,

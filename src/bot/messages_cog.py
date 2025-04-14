@@ -1,13 +1,13 @@
 import discord
 from discord.ext import commands
 from datetime import datetime
-from ..database.logging_database import Database
+from ..database.logging_database import Logging_Database
 
 
 class MessagesCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.__sql = Database()
+        self.__sql = Logging_Database()
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
