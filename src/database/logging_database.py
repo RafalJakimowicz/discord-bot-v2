@@ -118,9 +118,7 @@ class Logging_Database:
         :rtype: list
         """
 
-        table_messages_name = f'messages'
-        #d
-        SELECT_BY_ID_QUERY = sql.SQL("SELECT * FROM {} WHERE message_id = %s").format(sql.Identifier(table_messages_name))
+        SELECT_BY_ID_QUERY = self.messages_queries[3]
 
         result = []
 
@@ -143,9 +141,7 @@ class Logging_Database:
         :rtype: list
         """
 
-        table_messages_name = f'members'
-        #d
-        SELECT_BY_ID_QUERY = sql.SQL("SELECT * FROM {} WHERE user_id = %s").format(sql.Identifier(table_messages_name))
+        SELECT_BY_ID_QUERY = self.members_queries[2]
 
         result = []
 
@@ -168,9 +164,8 @@ class Logging_Database:
         :param message: The Discord message object that was deleted.
         :type message: discord.Message
         """
-        table_deleted_name = f"deleted_messages"
-        #d
-        ADD_QUERY = sql.SQL("""INSERT INTO {} (message_id) VALUES (%s)""").format(sql.Identifier(table_deleted_name))
+
+        ADD_QUERY = self.messages_queries[4]
 
         try:
             self.cursor.execute(ADD_QUERY, (message.id,))
@@ -188,12 +183,8 @@ class Logging_Database:
         :param after: after message object to be added to database
         :type after: discord.Message
         """
-        #d
-        table_name = f"edited_messages"
-        ADD_EDITED_MESSAGE_QUERY = sql.SQL("""
-            INSERT INTO {} (message_id, before_content, after_content)
-            VALUES (%s,%s,%s)
-        """).format(sql.Identifier(table_name))
+
+        ADD_EDITED_MESSAGE_QUERY = self.messages_queries[5]
 
         try:
             self.cursor.execute(ADD_EDITED_MESSAGE_QUERY, (before.id, before.content, after.content))
@@ -211,12 +202,8 @@ class Logging_Database:
         :param timestamp: The timestamp indicating when the message was sent.
         :type timestamp: str
         """
-        #d
-        table_name = f"messages"
-        ADD_MESSAGE_QUERY = sql.SQL("""
-            INSERT INTO {} (message_id, user_id, timestamp, guild_name, channel_name, content)
-            VALUES (%s,%s,%s,%s,%s,%s)
-            """).format(sql.Identifier(table_name))
+
+        ADD_MESSAGE_QUERY = self.messages_queries[6]
         
         data = (message.id, message.author.id, timestamp, message.guild.name, message.channel.name, message.content)
 
@@ -237,16 +224,7 @@ class Logging_Database:
         :type member: discord.Member
         """
 
-        #d
-        # Compose the query to match guild
-        ADD_MEMBER_QUERY = """
-            INSERT INTO members (user_id, username)
-            VALUES (%s, %s)
-            ON CONFLICT (user_id) 
-                DO UPDATE SET
-                username = EXCLUDED.username
-                
-        """
+        ADD_MEMBER_QUERY = self.members_queries[3]
         
         data = (member.id, member.global_name)
 
@@ -264,10 +242,8 @@ class Logging_Database:
         :return: A list of tuples representing all messages.
         :rtype: list
         """
-        #d
-        GET_ALL_MESSAGES_QUERY = f"""
-            SELECT * FROM messages
-            """
+
+        GET_ALL_MESSAGES_QUERY = self.messages_queries[7]
         
         self.cursor.execute(GET_ALL_MESSAGES_QUERY)
         records = self.cursor.fetchall()
@@ -275,7 +251,7 @@ class Logging_Database:
         return records
 
     async def get_messages_by_username(self, username: str) -> list:
-        #d
+
         """
         Retrieves messages posted by a user by first determining the user's ID from the members table
         and then querying the messages table.
@@ -285,25 +261,11 @@ class Logging_Database:
         :return: A list of tuples representing the messages posted by the user.
         :rtype: list
         """
-        user_table_name = f"members"
-        GET_USER_ID_QUERY = sql.SQL("SELECT * FROM {} WHERE username = %s").format(sql.Identifier(user_table_name))
-        
-        user_id = 0
-        try:
-            self.cursor.execute(GET_USER_ID_QUERY, (username,))
-            response = self.cursor.fetchall()
 
-            #gets user id from response
-            user_id = int(response[0][1])
-        except Exception as e:
-            print(f"error:  {e}")
-            self.connection.rollback()
-
-        messages_table_name = f"messages"
-        GET_MESSAGES_QUERY = sql.SQL("SELECT * FROM {} WHERE user_id = %s").format(sql.Identifier(messages_table_name))
+        GET_MESSAGES_QUERY = self.messages_queries[8]
         records = []
         try:
-            self.cursor.execute(GET_MESSAGES_QUERY, (user_id,))
+            self.cursor.execute(GET_MESSAGES_QUERY, (username,))
             records = self.cursor.fetchall()
         except Exception as e:
             print(f"error: {e}")
@@ -325,10 +287,7 @@ class Logging_Database:
         :type timestamp: str
         """
 
-
-        #d
-        table_name = f"member_joins_leaves"
-        ADD_RECORD_QUERY = sql.SQL("INSER INTO {} (user_id, time_stamp, is_join, is_leave) VALUES (%s, %s, %s, %s)").format(sql.Identifier(table_name))
+        ADD_RECORD_QUERY = self.members_queries[4]
 
         try:
             self.cursor.execute(ADD_RECORD_QUERY, (member.id, timestamp, join, leave))
@@ -348,9 +307,8 @@ class Logging_Database:
         """
         if(before.id != after.id):
             raise Exception("User id do not match!")
-        table_name = "members"
-        #d
-        UPDATE_QUERY = sql.SQL("UPDATE {} SET username = %s WHERE user_id = %s").format(sql.Identifier(table_name))
+        
+        UPDATE_QUERY = self.members_queries[5]
 
         data = (after.global_name, after.id)
 
@@ -368,9 +326,8 @@ class Logging_Database:
         :return: list of all rows
         :rtype: list
         """
-        table_name = "member_joins_leaves"
-        #d
-        GET_QUERY = sql.SQL("SELECT * FROM {}").format(sql.Identifier(table_name))
+
+        GET_QUERY = self.members_queries[6]
 
         result = []
 
@@ -390,9 +347,8 @@ class Logging_Database:
         :return: list of all rows
         :rtype: list
         """
-        table_name = "members"
-        #d
-        GET_QUERY = sql.SQL("SELECT * FROM {}").format(sql.Identifier(table_name))
+
+        GET_QUERY = self.members_queries[7]
 
         result = []
 
