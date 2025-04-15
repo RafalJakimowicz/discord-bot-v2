@@ -14,11 +14,6 @@ class DiscordBot(commands.Bot):
         super().__init__(command_prefix=command_prefix, intents=intents)
         self.config = config
         self.path = config_path
-        self.__admin = AdminConfig(
-            bot=self,
-            config=self.config,
-            config_path=self.path
-        )
         self.commands_list = []
         self.setup_commands()
 

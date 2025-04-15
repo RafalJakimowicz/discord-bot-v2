@@ -38,6 +38,9 @@ class Logging_Database:
         #create cursor fo executing
         self.cursor = self.connection.cursor()
 
+        self.members_queries = self.get_queries("src/database/sql/members_queries.sql")
+        self.messages_queries = self.get_queries("src/database/sql/messages_queries.sql")
+
     def create_connection(self):
         """
         Creates a connection to the PostgreSQL database using the provided credentials.
@@ -61,6 +64,14 @@ class Logging_Database:
 
         return connection
     
+    def get_queries(self, filename: str) -> list[str]:
+        '''
+        gets queries from sql file
+        '''
+
+        with open(filename, 'r') as file:
+            return file.read().split(';')
+    
     def init_table(self):
         """
         Initializes the necessary tables for a specific guild.
@@ -76,68 +87,15 @@ class Logging_Database:
         :type guild_name: str
         """
 
-        TABLE_INIT_MESSAGES_QUERY = f"""
-            CREATE TABLE IF NOT EXISTS messages
-            (
-                id SERIAL PRIMARY KEY,
-                message_id BIGINT UNIQUE,
-                user_id BIGINT,
-                timestamp TEXT,
-                guild_name TEXT,
-                channel_name TEXT,
-                content TEXT
-            );
-            """
-        
-        TABLE_INIT_MEMBERS_QUERY = f"""
-            CREATE TABLE IF NOT EXISTS members
-            (
-                id SERIAL PRIMARY KEY,
-                user_id BIGINT UNIQUE,
-                username TEXT
-            );
-            """
-        
-        TABLE_INIT_DELETED_MESSAGES_QUERY = f"""
-            CREATE TABLE IF NOT EXISTS deleted_messages
-            (
-                id SERIAL PRIMARY KEY,
-                message_id BIGINT UNIQUE NOT NULL,
-                CONSTRAINT fk_message
-                    FOREIGN KEY (message_id)
-                        REFERENCES messages(message_id)
-                        ON DELETE CASCADE
-            );
-            """
-        
-        TABLE_INIT_EDITED_MESSAGES_QUERY = f"""
-            CREATE TABLE IF NOT EXISTS edited_messages
-            (
-                id SERIAL PRIMARY KEY,
-                message_id BIGINT NOT NULL,
-                before_content TEXT,
-                after_content TEXT,
-                CONSTRAINT fk_message
-                    FOREIGN KEY (message_id)
-                        REFERENCES messages(message_id)
-                        ON DELETE CASCADE
-            );
-            """
-        
-        TABLE_JOINS_AND_LEAVES_INIT_QUERY = """
-            CREATE TABLE IF NOT EXISTS member_joins_leaves
-            (
-                id SERIAL PRIMARY KEY,
-                user_id BIGINT NOT NULL,
-                time_stamp TEXT,
-                is_join BOOL,
-                is_leave BOOL,
-                CONSTRAINT fk_members
-                    FOREIGN KEY (user_id)
-                        REFERENCES members(user_id)
-                        ON DELETE CASCADE
-            );
-            """
+        TABLE_INIT_MESSAGES_QUERY = self.messages_queries[0]
+
+        TABLE_INIT_MEMBERS_QUERY = self.members_queries[0]
+
+        TABLE_INIT_DELETED_MESSAGES_QUERY = self.messages_queries[1]
+
+        TABLE_INIT_EDITED_MESSAGES_QUERY = self.messages_queries[2]
+
+        TABLE_JOINS_AND_LEAVES_INIT_QUERY = self.members_queries[1]
         try:
                 
             self.cursor.execute(TABLE_INIT_MESSAGES_QUERY)
@@ -161,7 +119,7 @@ class Logging_Database:
         """
 
         table_messages_name = f'messages'
-
+        #d
         SELECT_BY_ID_QUERY = sql.SQL("SELECT * FROM {} WHERE message_id = %s").format(sql.Identifier(table_messages_name))
 
         result = []
@@ -177,7 +135,7 @@ class Logging_Database:
     
     async def get_member_by_id(self, memeber_id: int) -> list:
         """
-        Retrieves a member record from the messages table based on its member_id.
+        Retrieves a member record from the messages table based on its user_id.
         
         :param member_id: The unique identifier for the member.
         :type member_id: int
@@ -186,8 +144,8 @@ class Logging_Database:
         """
 
         table_messages_name = f'members'
-
-        SELECT_BY_ID_QUERY = sql.SQL("SELECT * FROM {} WHERE message_id = %s").format(sql.Identifier(table_messages_name))
+        #d
+        SELECT_BY_ID_QUERY = sql.SQL("SELECT * FROM {} WHERE user_id = %s").format(sql.Identifier(table_messages_name))
 
         result = []
 
@@ -211,7 +169,7 @@ class Logging_Database:
         :type message: discord.Message
         """
         table_deleted_name = f"deleted_messages"
-
+        #d
         ADD_QUERY = sql.SQL("""INSERT INTO {} (message_id) VALUES (%s)""").format(sql.Identifier(table_deleted_name))
 
         try:
@@ -230,7 +188,7 @@ class Logging_Database:
         :param after: after message object to be added to database
         :type after: discord.Message
         """
-
+        #d
         table_name = f"edited_messages"
         ADD_EDITED_MESSAGE_QUERY = sql.SQL("""
             INSERT INTO {} (message_id, before_content, after_content)
@@ -253,7 +211,7 @@ class Logging_Database:
         :param timestamp: The timestamp indicating when the message was sent.
         :type timestamp: str
         """
-        
+        #d
         table_name = f"messages"
         ADD_MESSAGE_QUERY = sql.SQL("""
             INSERT INTO {} (message_id, user_id, timestamp, guild_name, channel_name, content)
@@ -279,6 +237,7 @@ class Logging_Database:
         :type member: discord.Member
         """
 
+        #d
         # Compose the query to match guild
         ADD_MEMBER_QUERY = """
             INSERT INTO members (user_id, username)
@@ -305,6 +264,7 @@ class Logging_Database:
         :return: A list of tuples representing all messages.
         :rtype: list
         """
+        #d
         GET_ALL_MESSAGES_QUERY = f"""
             SELECT * FROM messages
             """
@@ -315,6 +275,7 @@ class Logging_Database:
         return records
 
     async def get_messages_by_username(self, username: str) -> list:
+        #d
         """
         Retrieves messages posted by a user by first determining the user's ID from the members table
         and then querying the messages table.
@@ -365,6 +326,7 @@ class Logging_Database:
         """
 
 
+        #d
         table_name = f"member_joins_leaves"
         ADD_RECORD_QUERY = sql.SQL("INSER INTO {} (user_id, time_stamp, is_join, is_leave) VALUES (%s, %s, %s, %s)").format(sql.Identifier(table_name))
 
@@ -387,7 +349,7 @@ class Logging_Database:
         if(before.id != after.id):
             raise Exception("User id do not match!")
         table_name = "members"
-
+        #d
         UPDATE_QUERY = sql.SQL("UPDATE {} SET username = %s WHERE user_id = %s").format(sql.Identifier(table_name))
 
         data = (after.global_name, after.id)
@@ -407,7 +369,7 @@ class Logging_Database:
         :rtype: list
         """
         table_name = "member_joins_leaves"
-
+        #d
         GET_QUERY = sql.SQL("SELECT * FROM {}").format(sql.Identifier(table_name))
 
         result = []
@@ -429,7 +391,7 @@ class Logging_Database:
         :rtype: list
         """
         table_name = "members"
-
+        #d
         GET_QUERY = sql.SQL("SELECT * FROM {}").format(sql.Identifier(table_name))
 
         result = []

@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
 from datetime import datetime
+from discord import app_commands
 from ..database.logging_database import Logging_Database
 
 
@@ -35,6 +36,10 @@ class MessagesCog(commands.Cog):
             return
         
         await self.__sql.add_edited_message_to_database(before=before, after=after)
+
+    @app_commands.command(name="message-stats", description="gets messages stats")
+    async def get_messages_stats(self, interaction: discord.Interaction):
+        pass
         
 
         

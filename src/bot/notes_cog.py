@@ -29,6 +29,13 @@ class NotesCog(commands.Cog):
 
     @app_commands.command(name="my-notes", description="gets user notes")
     async def get_user_notes(self, interaction: discord.Interaction):
+        """
+        gets all user notes and displays only their title and id in embeded message
+
+        :param interaction: discord interaction with user
+        :type interaction: discord.Interaction
+
+        """
         await interaction.response.defer(thinking=True)
         notes = await self.__sql.get_all_member_notes(interaction.user)
         embed = discord.Embed(
@@ -46,6 +53,15 @@ class NotesCog(commands.Cog):
 
     @app_commands.command(name="get-note", description="gets note by id")
     async def get_user_note(self, interaction: discord.Interaction, note_id: int):
+        """
+        command to get note from database by its 6 digit id,
+        and send embeded message to user with note data
+
+        :param interaction: discord interaction
+        :type interaction: discord.Interaction
+        :param note_id: id of note
+        :type note_id: int
+        """
         await interaction.response.defer(thinking=True)
         note = await self.__sql.get_note_by_id(note_id)
         embed = discord.Embed(
