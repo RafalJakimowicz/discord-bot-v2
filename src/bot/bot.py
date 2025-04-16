@@ -18,6 +18,9 @@ class DiscordBot(commands.Bot):
         self.setup_commands()
 
     async def on_ready(self):
+        """
+        Set-ups all cogs and commands
+        """
         print(f'Logged as {self.user.name} (ID: {self.user.id})') 
 
         if(self.config["features"]["logging"] == True):
